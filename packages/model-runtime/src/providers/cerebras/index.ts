@@ -9,6 +9,7 @@ import { processMultiProviderModelList } from '../../utils/modelParse';
 export const params = {
   baseURL: 'https://api.cerebras.ai/v1',
   chatCompletion: {
+    excludeUsage: true,
     handlePayload: (payload) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
       const { frequency_penalty, presence_penalty, model, ...rest } = payload;
