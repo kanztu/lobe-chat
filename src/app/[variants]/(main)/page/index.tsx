@@ -20,7 +20,7 @@ const PagesPage = memo(() => {
     <>
       <PageTitle />
       <Suspense fallback={<Loading debugId="PagesPage" />}>
-        <PageExplorer pageId={standardizeIdentifier(id ?? '', 'docs')} />
+        <PageExplorer pageId={id ? standardizeIdentifier(id, 'docs') : undefined} />
       </Suspense>
     </>
   );

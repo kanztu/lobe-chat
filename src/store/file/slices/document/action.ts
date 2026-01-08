@@ -14,8 +14,14 @@ import { type DocumentQueryFilter } from './initialState';
 
 const n = setNamespace('document');
 
-const ALLOWED_DOCUMENT_SOURCE_TYPES = new Set(['api', 'topic']);
-const ALLOWED_DOCUMENT_FILE_TYPES = new Set(['custom/document', 'application/pdf']);
+const ALLOWED_DOCUMENT_SOURCE_TYPES = new Set(['api', 'topic', 'file']);
+const ALLOWED_DOCUMENT_FILE_TYPES = new Set([
+  'custom/document',
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+]);
 const EDITOR_DOCUMENT_FILE_TYPE = 'custom/document';
 
 const updateUrl = (docId: string | null) => {
