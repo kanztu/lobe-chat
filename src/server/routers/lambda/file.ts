@@ -362,9 +362,45 @@ export const fileRouter = router({
       const limit = input?.limit ?? 12;
       // Query recent items and filter for pages (documents) only, exclude folders
       const allItems = await ctx.knowledgeRepo.queryRecent(limit * 3); // Query more to ensure we have enough pages after filtering
-      return allItems
+      const filteredItems = allItems
         .filter((item) => item.sourceType === 'document' && item.fileType !== 'custom/folder')
         .slice(0, limit);
+
+      // Enrich with task status for items that have tasks
+      const chunkTaskIds = filteredItems
+        .map((item) => item.chunkTaskId)
+        .filter(Boolean) as string[];
+      const embeddingTaskIds = filteredItems
+        .map((item) => item.embeddingTaskId)
+        .filter(Boolean) as string[];
+
+      const [chunkTasks, embeddingTasks] = await Promise.all([
+        chunkTaskIds.length > 0
+          ? ctx.asyncTaskModel.findByIds(chunkTaskIds, AsyncTaskType.Chunking)
+          : Promise.resolve([]),
+        embeddingTaskIds.length > 0
+          ? ctx.asyncTaskModel.findByIds(embeddingTaskIds, AsyncTaskType.Embedding)
+          : Promise.resolve([]),
+      ]);
+
+      return filteredItems.map((item) => {
+        const chunkTask = item.chunkTaskId
+          ? chunkTasks.find((task) => task.id === item.chunkTaskId)
+          : null;
+        const embeddingTask = item.embeddingTaskId
+          ? embeddingTasks.find((task) => task.id === item.embeddingTaskId)
+          : null;
+
+        return {
+          ...item,
+          chunkCount: 0, // Pages don't have chunk count
+          chunkingError: chunkTask?.error ?? null,
+          chunkingStatus: chunkTask?.status ?? null,
+          embeddingError: embeddingTask?.error ?? null,
+          embeddingStatus: embeddingTask?.status ?? null,
+          finishEmbedding: embeddingTask?.status === AsyncTaskStatus.Success,
+        };
+      });
     }),
 
   removeAllFiles: fileProcedure.mutation(async ({ ctx }) => {
