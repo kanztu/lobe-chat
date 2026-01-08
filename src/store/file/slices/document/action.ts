@@ -13,7 +13,7 @@ import { type DocumentQueryFilter } from './initialState';
 
 const n = setNamespace('document');
 
-const ALLOWED_DOCUMENT_SOURCE_TYPES = new Set(['editor', 'file', 'api']);
+const ALLOWED_DOCUMENT_SOURCE_TYPES = new Set(['api', 'topic']);
 const ALLOWED_DOCUMENT_FILE_TYPES = new Set(['custom/document', 'application/pdf']);
 const EDITOR_DOCUMENT_FILE_TYPE = 'custom/document';
 
