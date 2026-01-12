@@ -75,6 +75,17 @@ export const transformAnthropicStream = (
 
           context.tool = { id: toolChunk.id, index: context.toolIndex, name: toolChunk.name };
 
+          // Store tool info by content block index for parallel tool tracking
+          // @ts-ignore - chunk.index exists on content_block_start events per Anthropic API
+          const contentBlockIndex = chunk.index;
+          if (typeof contentBlockIndex === 'number') {
+            if (!context.contentBlockTools) context.contentBlockTools = {};
+            context.contentBlockTools[contentBlockIndex] = {
+              id: toolChunk.id,
+              name: toolChunk.name,
+            };
+          }
+
           return { data: [toolCall], id: context.id, type: 'tool_calls' };
         }
 
@@ -134,9 +145,17 @@ export const transformAnthropicStream = (
         case 'input_json_delta': {
           const delta = chunk.delta.partial_json;
 
+          // Look up tool ID by content block index to handle parallel tool calls
+          // @ts-ignore - chunk.index exists on content_block_delta events per Anthropic API
+          const contentBlockIndex = chunk.index;
+          const toolInfo =
+            typeof contentBlockIndex === 'number'
+              ? context.contentBlockTools?.[contentBlockIndex]
+              : undefined;
+
           const toolCall: StreamToolCallChunkData = {
             function: { arguments: delta },
-            id: context.tool?.id,
+            id: toolInfo?.id ?? context.tool?.id,
             index: context.toolIndex || 0,
             type: 'function',
           };

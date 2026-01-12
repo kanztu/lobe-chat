@@ -64,6 +64,11 @@ export interface StreamContext {
    * Used when multiple tools are called in parallel (e.g., GPT-5.2 parallel search)
    */
   tools?: Record<number, { id: string; index: number; name: string }>;
+  /**
+   * Map of content block index to tool ID for Anthropic streams
+   * Anthropic can stream multiple tool_use blocks in parallel, each identified by content block index
+   */
+  contentBlockTools?: Record<number, { id: string; name: string }>;
   usage?: ModelUsage;
 }
 
