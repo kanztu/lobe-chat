@@ -17,6 +17,22 @@ export const parseToolCalls = (origin: MessageToolCall[], value: MessageToolCall
       if (existingByIdIndex !== -1) {
         // Found existing tool call with same id - merge arguments
         if (item.function?.arguments) {
+          const currentArgs = draft[existingByIdIndex].function.arguments;
+          const newArgs = item.function.arguments;
+
+          // Detect if we're trying to concatenate two complete JSON objects (likely a bug)
+          if (currentArgs && currentArgs.trim().endsWith('}') && newArgs.trim().startsWith('{')) {
+            console.warn(
+              '[parseToolCalls] Detected potential double JSON concatenation:',
+              {
+                toolId: item.id,
+                toolName: item.function?.name,
+                currentArgs: currentArgs.slice(-50),
+                newArgs: newArgs.slice(0, 50),
+              },
+            );
+          }
+
           draft[existingByIdIndex].function.arguments += item.function.arguments;
         }
       } else if (!draft?.[index]) {
@@ -29,6 +45,23 @@ export const parseToolCalls = (origin: MessageToolCall[], value: MessageToolCall
       } else {
         // Same index and same id (or no id) - merge arguments
         if (item.function?.arguments) {
+          const currentArgs = draft[index].function.arguments;
+          const newArgs = item.function.arguments;
+
+          // Detect if we're trying to concatenate two complete JSON objects (likely a bug)
+          if (currentArgs && currentArgs.trim().endsWith('}') && newArgs.trim().startsWith('{')) {
+            console.warn(
+              '[parseToolCalls] Detected potential double JSON concatenation:',
+              {
+                index,
+                toolId: item.id,
+                toolName: item.function?.name,
+                currentArgs: currentArgs.slice(-50),
+                newArgs: newArgs.slice(0, 50),
+              },
+            );
+          }
+
           draft[index].function.arguments += item.function.arguments;
         }
       }
