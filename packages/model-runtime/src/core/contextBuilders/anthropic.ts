@@ -102,16 +102,34 @@ export const buildAnthropicMessage = async (
 
         const messageContent = await buildArrayContent(rawContent);
 
+        const toolUseBlocks = message.tool_calls
+          .map((tool) => {
+            try {
+              return {
+                id: tool.id,
+                input: JSON.parse(tool.function.arguments),
+                name: tool.function.name,
+                type: 'tool_use',
+              };
+            } catch (error) {
+              console.error(
+                `[Anthropic] Failed to parse tool arguments for tool ${tool.function.name}:`,
+                {
+                  arguments: tool.function.arguments,
+                  error: error instanceof Error ? error.message : String(error),
+                },
+              );
+              // Skip this tool call if arguments are malformed
+              return null;
+            }
+          })
+          .filter(Boolean);
+
         return {
           content: [
             // avoid empty text content block
             ...messageContent,
-            ...(message.tool_calls.map((tool) => ({
-              id: tool.id,
-              input: JSON.parse(tool.function.arguments),
-              name: tool.function.name,
-              type: 'tool_use',
-            })) as any),
+            ...(toolUseBlocks as any),
           ].filter(Boolean),
           role: 'assistant',
         };

@@ -205,6 +205,108 @@ describe('anthropicHelpers', () => {
       ]);
     });
 
+    it('should skip tool calls with malformed JSON arguments', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const message: OpenAIChatMessage = {
+        content: 'Here is the result:',
+        role: 'assistant',
+        tool_calls: [
+          {
+            id: 'call1',
+            type: 'function',
+            function: {
+              name: 'search',
+              arguments: '{"query":"valid"}',
+            },
+          },
+          {
+            id: 'call2',
+            type: 'function',
+            function: {
+              name: 'badTool',
+              arguments: '{"invalid": "json"} extra content after',
+            },
+          },
+          {
+            id: 'call3',
+            type: 'function',
+            function: {
+              name: 'anotherTool',
+              arguments: '{"valid":"json"}',
+            },
+          },
+        ],
+      };
+
+      const result = await buildAnthropicMessage(message);
+
+      expect(result!.role).toBe('assistant');
+      expect(result!.content).toEqual([
+        { text: 'Here is the result:', type: 'text' },
+        {
+          id: 'call1',
+          input: { query: 'valid' },
+          name: 'search',
+          type: 'tool_use',
+        },
+        {
+          id: 'call3',
+          input: { valid: 'json' },
+          name: 'anotherTool',
+          type: 'tool_use',
+        },
+      ]);
+
+      // Verify that error was logged
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[Anthropic] Failed to parse tool arguments for tool badTool:',
+        expect.objectContaining({
+          arguments: '{"invalid": "json"} extra content after',
+          error: expect.stringContaining('JSON'),
+        }),
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle all tool calls being malformed', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const message: OpenAIChatMessage = {
+        content: 'Attempting to use tools:',
+        role: 'assistant',
+        tool_calls: [
+          {
+            id: 'call1',
+            type: 'function',
+            function: {
+              name: 'badTool1',
+              arguments: 'not json at all',
+            },
+          },
+          {
+            id: 'call2',
+            type: 'function',
+            function: {
+              name: 'badTool2',
+              arguments: '{incomplete',
+            },
+          },
+        ],
+      };
+
+      const result = await buildAnthropicMessage(message);
+
+      expect(result!.role).toBe('assistant');
+      expect(result!.content).toEqual([{ text: 'Attempting to use tools:', type: 'text' }]);
+
+      // Verify that errors were logged for both tools
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(2);
+
+      consoleErrorSpy.mockRestore();
+    });
+
     it('should correctly convert function message', async () => {
       const message: OpenAIChatMessage = {
         content: 'def hello(name):\n  return f"Hello {name}"',
