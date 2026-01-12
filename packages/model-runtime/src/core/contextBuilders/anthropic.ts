@@ -6,69 +6,93 @@ import { OpenAIChatMessage, UserMessageContentPart } from '../../types';
 import { parseDataUri } from '../../utils/uriParser';
 
 /**
- * Attempts to extract the first valid JSON object from a string that may contain
- * multiple concatenated JSON objects. This handles cases where Anthropic's model
- * generates malformed tool arguments with multiple JSON objects concatenated together.
+ * Extracts all valid JSON objects from a string that may contain multiple concatenated
+ * JSON objects. Returns array of parsed objects.
+ * This handles cases where Anthropic's model generates malformed tool arguments.
  */
-const parseFirstValidJSON = (jsonString: string): any => {
-  // First, try normal parse
+const extractAllValidJSONs = (jsonString: string): any[] => {
+  // First, try normal parse - if it works, return single-element array
   try {
-    return JSON.parse(jsonString);
+    return [JSON.parse(jsonString)];
   } catch (error) {
-    // If it fails with "non-whitespace character after JSON", try to extract first valid JSON
+    // If it fails with "non-whitespace character after JSON", extract all valid JSONs
     if (error instanceof SyntaxError && error.message.includes('non-whitespace character after JSON')) {
-      // Try to find where the first JSON object ends
-      let depth = 0;
-      let inString = false;
-      let escape = false;
+      const extractedJSONs: any[] = [];
+      let currentPos = 0;
 
-      for (let i = 0; i < jsonString.length; i++) {
-        const char = jsonString[i];
-
-        if (escape) {
-          escape = false;
-          continue;
+      while (currentPos < jsonString.length) {
+        // Skip whitespace
+        while (currentPos < jsonString.length && /\s/.test(jsonString[currentPos])) {
+          currentPos++;
         }
+        if (currentPos >= jsonString.length) break;
 
-        if (char === '\\') {
-          escape = true;
-          continue;
-        }
+        // Try to parse JSON starting at currentPos
+        let depth = 0;
+        let inString = false;
+        let escape = false;
+        let startPos = currentPos;
 
-        if (char === '"' && !escape) {
-          inString = !inString;
-          continue;
-        }
+        for (let i = currentPos; i < jsonString.length; i++) {
+          const char = jsonString[i];
 
-        if (!inString) {
-          if (char === '{' || char === '[') {
-            depth++;
-          } else if (char === '}' || char === ']') {
-            depth--;
-            if (depth === 0) {
-              // Found the end of the first complete JSON object
-              const firstJSON = jsonString.substring(0, i + 1);
-              try {
-                const parsed = JSON.parse(firstJSON);
-                console.warn(
-                  '[Anthropic] Detected concatenated JSON objects, extracted first valid object:',
-                  {
-                    original: jsonString.substring(0, 100) + '...',
-                    extracted: firstJSON,
-                  }
-                );
-                return parsed;
-              } catch {
-                // Continue searching
+          if (escape) {
+            escape = false;
+            continue;
+          }
+
+          if (char === '\\') {
+            escape = true;
+            continue;
+          }
+
+          if (char === '"' && !escape) {
+            inString = !inString;
+            continue;
+          }
+
+          if (!inString) {
+            if (char === '{' || char === '[') {
+              depth++;
+            } else if (char === '}' || char === ']') {
+              depth--;
+              if (depth === 0) {
+                // Found a complete JSON object
+                const jsonStr = jsonString.substring(startPos, i + 1);
+                try {
+                  extractedJSONs.push(JSON.parse(jsonStr));
+                  currentPos = i + 1;
+                  break;
+                } catch {
+                  // Invalid JSON, skip
+                  currentPos = i + 1;
+                  break;
+                }
               }
             }
           }
         }
+
+        // If we didn't find a complete object, break
+        if (currentPos === startPos) break;
       }
+
+      if (extractedJSONs.length > 1) {
+        console.warn(
+          `[Anthropic] MODEL BUG: Detected ${extractedJSONs.length} concatenated JSON objects in tool arguments!`,
+          {
+            toolArgumentsPreview: jsonString.substring(0, 150) + '...',
+            extractedObjects: extractedJSONs,
+            note: `Creating ${extractedJSONs.length} separate tool_use blocks. Some may fail schema validation but all will be attempted.`,
+          }
+        );
+      }
+
+      return extractedJSONs;
     }
 
-    // If we couldn't extract, rethrow original error
-    throw error;
+    // If we couldn't extract any valid JSON, return empty array
+    return [];
   }
 };
 
@@ -170,14 +194,29 @@ export const buildAnthropicMessage = async (
         const messageContent = await buildArrayContent(rawContent);
 
         const toolUseBlocks = message.tool_calls
-          .map((tool) => {
+          .flatMap((tool) => {
             try {
-              return {
-                id: tool.id,
-                input: parseFirstValidJSON(tool.function.arguments),
+              const extractedJSONs = extractAllValidJSONs(tool.function.arguments);
+
+              if (extractedJSONs.length === 0) {
+                // No valid JSON found
+                console.error(
+                  `[Anthropic] Failed to parse tool arguments for tool ${tool.function.name}:`,
+                  {
+                    arguments: tool.function.arguments,
+                    error: 'No valid JSON objects found',
+                  }
+                );
+                return [];
+              }
+
+              // Create a tool_use block for each extracted JSON
+              return extractedJSONs.map((input, index) => ({
+                id: index === 0 ? tool.id : `${tool.id}_split_${index}`,
+                input,
                 name: tool.function.name,
                 type: 'tool_use',
-              };
+              }));
             } catch (error) {
               console.error(
                 `[Anthropic] Failed to parse tool arguments for tool ${tool.function.name}:`,
@@ -186,8 +225,8 @@ export const buildAnthropicMessage = async (
                   error: error instanceof Error ? error.message : String(error),
                 },
               );
-              // Skip this tool call if arguments are malformed
-              return null;
+              // Skip this tool call if arguments are completely malformed
+              return [];
             }
           })
           .filter(Boolean);
