@@ -136,6 +136,7 @@ export const transformAnthropicStream = (
 
           const toolCall: StreamToolCallChunkData = {
             function: { arguments: delta },
+            id: context.tool?.id,
             index: context.toolIndex || 0,
             type: 'function',
           };
