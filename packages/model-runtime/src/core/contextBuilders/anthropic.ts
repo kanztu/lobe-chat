@@ -5,6 +5,73 @@ import OpenAI from 'openai';
 import { OpenAIChatMessage, UserMessageContentPart } from '../../types';
 import { parseDataUri } from '../../utils/uriParser';
 
+/**
+ * Attempts to extract the first valid JSON object from a string that may contain
+ * multiple concatenated JSON objects. This handles cases where Anthropic's model
+ * generates malformed tool arguments with multiple JSON objects concatenated together.
+ */
+const parseFirstValidJSON = (jsonString: string): any => {
+  // First, try normal parse
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    // If it fails with "non-whitespace character after JSON", try to extract first valid JSON
+    if (error instanceof SyntaxError && error.message.includes('non-whitespace character after JSON')) {
+      // Try to find where the first JSON object ends
+      let depth = 0;
+      let inString = false;
+      let escape = false;
+
+      for (let i = 0; i < jsonString.length; i++) {
+        const char = jsonString[i];
+
+        if (escape) {
+          escape = false;
+          continue;
+        }
+
+        if (char === '\\') {
+          escape = true;
+          continue;
+        }
+
+        if (char === '"' && !escape) {
+          inString = !inString;
+          continue;
+        }
+
+        if (!inString) {
+          if (char === '{' || char === '[') {
+            depth++;
+          } else if (char === '}' || char === ']') {
+            depth--;
+            if (depth === 0) {
+              // Found the end of the first complete JSON object
+              const firstJSON = jsonString.substring(0, i + 1);
+              try {
+                const parsed = JSON.parse(firstJSON);
+                console.warn(
+                  '[Anthropic] Detected concatenated JSON objects, extracted first valid object:',
+                  {
+                    original: jsonString.substring(0, 100) + '...',
+                    extracted: firstJSON,
+                  }
+                );
+                return parsed;
+              } catch {
+                // Continue searching
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // If we couldn't extract, rethrow original error
+    throw error;
+  }
+};
+
 export const buildAnthropicBlock = async (
   content: UserMessageContentPart,
 ): Promise<Anthropic.ContentBlock | Anthropic.ImageBlockParam | undefined> => {
@@ -107,7 +174,7 @@ export const buildAnthropicMessage = async (
             try {
               return {
                 id: tool.id,
-                input: JSON.parse(tool.function.arguments),
+                input: parseFirstValidJSON(tool.function.arguments),
                 name: tool.function.name,
                 type: 'tool_use',
               };
