@@ -17,6 +17,13 @@ export const parseToolCalls = (origin: MessageToolCall[], value: MessageToolCall
       if (existingByIdIndex !== -1) {
         // Found existing tool call with same id - merge arguments
         if (item.function?.arguments) {
+          console.log('[parseToolCalls] Concatenating to existing tool by ID:', {
+            toolId: item.id,
+            toolName: item.function?.name,
+            existingLength: draft[existingByIdIndex].function.arguments.length,
+            newDeltaLength: item.function.arguments.length,
+            newDelta: item.function.arguments,
+          });
           draft[existingByIdIndex].function.arguments += item.function.arguments;
         }
       } else if (!draft?.[index]) {
@@ -29,6 +36,14 @@ export const parseToolCalls = (origin: MessageToolCall[], value: MessageToolCall
       } else {
         // Same index and same id (or no id) - merge arguments
         if (item.function?.arguments) {
+          console.log('[parseToolCalls] Concatenating to existing tool by index:', {
+            index,
+            toolId: item.id,
+            toolName: item.function?.name,
+            existingLength: draft[index].function.arguments.length,
+            newDeltaLength: item.function.arguments.length,
+            newDelta: item.function.arguments,
+          });
           draft[index].function.arguments += item.function.arguments;
         }
       }

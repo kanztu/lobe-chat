@@ -161,14 +161,19 @@ export const transformAnthropicStream = (
               ? context.contentBlockTools?.[contentBlockIndex]
               : undefined;
 
-          console.log('[Anthropic] input_json_delta:', {
+          // Track ALL deltas with a counter
+          if (!context.deltaCounter) context.deltaCounter = 0;
+          context.deltaCounter++;
+
+          console.log(`[Anthropic] input_json_delta #${context.deltaCounter}:`, {
             contentBlockIndex,
             hasIndex: typeof contentBlockIndex === 'number',
             toolInfoId: toolInfo?.id,
             toolInfoName: toolInfo?.name,
             fallbackId: context.tool?.id,
             usedId: toolInfo?.id ?? context.tool?.id,
-            deltaPreview: delta.slice(0, 50),
+            deltaLength: delta.length,
+            deltaFull: delta,
           });
 
           const toolCall: StreamToolCallChunkData = {

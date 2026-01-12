@@ -69,6 +69,10 @@ export interface StreamContext {
    * Anthropic can stream multiple tool_use blocks in parallel, each identified by content block index
    */
   contentBlockTools?: Record<number, { id: string; name: string }>;
+  /**
+   * Counter for tracking delta events for debugging
+   */
+  deltaCounter?: number;
   usage?: ModelUsage;
 }
 
