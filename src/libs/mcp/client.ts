@@ -141,7 +141,7 @@ async function preCheckStdioCommand(params: {
           method: 'initialize',
           params: {
             clientInfo: { name: 'lobe-mcp-precheck', version: '1.0.0' },
-            protocolVersion: '2024-11-05',
+            protocolVersion: '2025-06-18',
           },
         }) + '\n';
 
