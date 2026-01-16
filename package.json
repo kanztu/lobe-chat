@@ -141,6 +141,8 @@
     "@anthropic-ai/sdk": "^0.67.1",
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
+    "archiver": "^7.0.1",
+    "@aws-sdk/client-bedrock-runtime": "^3.941.0",
     "@aws-sdk/client-s3": "~3.932.0",
     "@aws-sdk/s3-request-presigner": "~3.932.0",
     "@azure-rest/ai-inference": "1.0.0-beta.5",
