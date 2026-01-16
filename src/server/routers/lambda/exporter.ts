@@ -8,6 +8,7 @@ import { SessionModel } from '@/database/models/session';
 import { DataExporterRepos } from '@/database/repositories/dataExporter';
 import { authedProcedure, router } from '@/libs/trpc/lambda';
 import { serverDatabase } from '@/libs/trpc/lambda/middleware';
+import { BackupZipGenerator } from '@/server/services/backup/zipGenerator';
 import { type ExportDatabaseData } from '@/types/export';
 
 const exportProcedure = authedProcedure.use(serverDatabase).use(async (opts) => {
@@ -192,4 +193,30 @@ export const exporterRouter = router({
         pdf: pdfBuffer.toString('base64'),
       };
     }),
+
+  downloadBackup: exportProcedure.mutation(async ({ ctx }) => {
+    // 1. Export all user data
+    const data = await ctx.dataExporterRepos.export(10);
+    const schemaHash = await ctx.drizzleMigration.getLatestMigrationHash();
+
+    // 2. Generate ZIP file
+    const zipGenerator = new BackupZipGenerator();
+    const zipStream = await zipGenerator.generateBackupZip({ data, schemaHash });
+
+    // 3. Convert stream to buffer
+    const chunks: Buffer[] = [];
+    for await (const chunk of zipStream) {
+      chunks.push(Buffer.from(chunk));
+    }
+    const zipBuffer = Buffer.concat(chunks);
+
+    // 4. Return as base64 for client download
+    const filename = `lobechat-backup-${new Date().toISOString().split('T')[0]}.zip`;
+
+    return {
+      filename,
+      data: zipBuffer.toString('base64'),
+      size: zipBuffer.length,
+    };
+  }),
 });

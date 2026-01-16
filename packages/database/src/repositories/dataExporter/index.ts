@@ -22,49 +22,102 @@ export interface RelationTableConfig {
 
 export const DATA_EXPORT_CONFIG = {
   baseTables: [
-    // { table: 'users', userField: 'id' },
+    // Core user data
+    // { table: 'users', userField: 'id' },  // Excluded - user metadata not needed in export
     { table: 'userSettings', userField: 'id' },
     { table: 'userInstalledPlugins' },
+
+    // Agents & AI
     { table: 'agents' },
-    // { table: 'agentsFiles' },
-    // { table: 'agentsKnowledgeBases' },
-    // { table: 'agentsToSessions' },
+    { table: 'agentsFiles' },
+    { table: 'agentsKnowledgeBases' },
     { table: 'aiModels' },
     { table: 'aiProviders' },
-    // async tasks should not be included
-    // { table: 'asyncTasks' },
-    // { table: 'chunks' },
-    // { table: 'unstructuredChunks' },
-    // { table: 'embeddings' },
-    // { table: 'files' },
-    // { table: 'fileChunks' },
-    // { table: 'filesToSessions' },
-    // { table: 'knowledgeBases' },
-    // { table: 'knowledgeBaseFiles' },
-    { table: 'messageChunks' },
-    { table: 'messagePlugins' },
-    // { table: 'messageQueryChunks' },
-    // { table: 'messageQueries' },
-    { table: 'messageTranslates' },
-    // { table: 'messageTTS' },
-    { table: 'messages' },
-    // { table: 'messagesFiles' },
+    { table: 'agentCronJobs' },
 
-    // next auth tables won't be included
-    // { table: 'nextauthAccounts' },
-    // { table: 'nextauthSessions' },
-    // { table: 'nextauthAuthenticators' },
-    // { table: 'nextauthVerificationTokens' },
-    { table: 'sessionGroups' },
+    // Conversations
     { table: 'sessions' },
+    { table: 'sessionGroups' },
+    { table: 'messages' },
+    { table: 'messageGroups' },
     { table: 'threads' },
     { table: 'topics' },
+
+    // Message extensions
+    { table: 'messageChunks' },
+    { table: 'messagePlugins' },
+    { table: 'messageTranslates' },
+    { table: 'messageTTS' },
+    { table: 'messageQueries' },
+    { table: 'messageQueryChunks' },
+    { table: 'messagesFiles' },
+
+    // Files & documents
+    { table: 'files' },
+    { table: 'documents' },
+    { table: 'knowledgeBases' },
+    { table: 'knowledgeBaseFiles' },
+    { table: 'fileChunks' },
+    { table: 'filesToSessions' },
+
+    // RAG system (exclude heavy vectors for browser export)
+    { table: 'chunks' },
+    { table: 'unstructuredChunks' },
+    // { table: 'embeddings' },  // Excluded - too large, can regenerate
+    { table: 'documentChunks' },
+
+    // RAG evaluation
+    { table: 'evalDatasets' },
+    { table: 'evalDatasetRecords' },
+    { table: 'evalEvaluation' },
+    { table: 'evaluationRecords' },
+
+    // User memory (exclude vectors for browser export)
+    // { table: 'userMemories' },  // Excluded - has vectors
+    // { table: 'userMemoriesContexts' },  // Excluded - has vectors
+    // { table: 'userMemoriesPreferences' },  // Excluded - has vectors
+    // { table: 'userMemoriesIdentities' },  // Excluded - has vectors
+    // { table: 'userMemoriesExperiences' },  // Excluded - has vectors
+
+    // Chat groups
+    { table: 'chatGroups' },
+    { table: 'chatGroupsAgents' },
+
+    // Topic sharing
+    { table: 'topicDocuments' },
+    { table: 'topicShares' },
+
+    // Image generation
+    { table: 'generationTopics' },
+    { table: 'generationBatches' },
+    { table: 'generations' },
+
+    // Authentication (selective)
+    { table: 'accounts' },
+    { table: 'auth_sessions' },
+    { table: 'passkey' },
+    // { table: 'two_factor' },  // Excluded - sensitive, would need encryption
+    // { table: 'verifications' },  // Excluded - temporary
+
+    // OIDC (selective - critical tables only)
+    { table: 'oidcConsents' },
+    // { table: 'oidcClients' },  // System config, not user data
+    // { table: 'oidcRefreshTokens' },  // Excluded - short-lived
+    // { table: 'oidcGrants' },  // Excluded - short-lived
+
+    // API keys - excluded for security
+    // { table: 'apiKeys' },  // Excluded - would need encryption
+
+    // RBAC
+    { table: 'userRoles' },
+    // { table: 'roles' },  // System config
+    // { table: 'permissions' },  // System config
+    // { table: 'rolePermissions' },  // System config
+
+    // Async tasks - only active ones
+    { table: 'asyncTasks' },
   ] as BaseTableConfig[],
   relationTables: [
-    // {
-    //   relations: [{ field: 'hashId', sourceField: 'fileHash', sourceTable: 'files' }],
-    //   table: 'globalFiles',
-    // },
     {
       relations: [
         { field: 'agentId', sourceField: 'id', sourceTable: 'agents' },
@@ -72,11 +125,10 @@ export const DATA_EXPORT_CONFIG = {
       ],
       table: 'agentsToSessions',
     },
-
-    // {
-    //   relations: [{ field: 'id', sourceField: 'id', sourceTable: 'messages' }],
-    //   table: 'messagePlugins',
-    // },
+    {
+      relations: [{ field: 'hashId', sourceField: 'fileHash', sourceTable: 'files' }],
+      table: 'globalFiles',
+    },
   ] as RelationTableConfig[],
 };
 
