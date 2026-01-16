@@ -381,6 +381,139 @@ const bedrockChatModels: AIChatModelCard[] = [
   },
 ];
 
-export const allModels = [...bedrockChatModels];
+// Titan Image Generator parameters
+const titanImageParameters: ModelParamsSchema = {
+  cfg: {
+    default: 8,
+    max: 10,
+    min: 1.1,
+    step: 0.1,
+  },
+  height: {
+    default: 1024,
+    max: 1408,
+    min: 384,
+    step: 1,
+  },
+  prompt: {
+    default: '',
+    description: 'Text prompt for image generation (max 512 characters)',
+  },
+  quality: {
+    default: 'standard',
+    enum: ['standard', 'premium'],
+  },
+  seed: {
+    default: null,
+    max: 2_147_483_646,
+    min: 0,
+  },
+  width: {
+    default: 1024,
+    max: 1408,
+    min: 384,
+    step: 1,
+  },
+};
+
+// Nova Canvas parameters
+const novaCanvasParameters: ModelParamsSchema = {
+  cfg: {
+    default: 8,
+    max: 10,
+    min: 1,
+    step: 0.1,
+  },
+  height: {
+    default: 1024,
+    max: 2048,
+    min: 320,
+    step: 64,
+  },
+  prompt: {
+    default: '',
+    description: 'Text prompt for image generation (max 1024 characters)',
+  },
+  quality: {
+    default: 'standard',
+    enum: ['standard', 'premium'],
+  },
+  seed: {
+    default: null,
+    max: 858_993_459,
+    min: 0,
+  },
+  width: {
+    default: 1024,
+    max: 2048,
+    min: 320,
+    step: 64,
+  },
+};
+
+const bedrockImageModels: AIImageModelCard[] = [
+  {
+    description:
+      'Amazon Nova Canvas is a state-of-the-art image generation model that creates studio-quality images with advanced features including inpainting, outpainting, image conditioning, and background removal.',
+    displayName: 'Nova Canvas',
+    enabled: true,
+    id: 'amazon.nova-canvas-v1:0',
+    parameters: novaCanvasParameters,
+    pricing: {
+      units: [
+        {
+          name: 'imageGeneration',
+          rate: 0.04,
+          strategy: 'fixed',
+          unit: 'image',
+        },
+      ],
+    },
+    releasedAt: '2024-12-03',
+    type: 'image',
+  },
+  {
+    description:
+      'Amazon Titan Image Generator V1 for creating, editing, and customizing images using text prompts with support for inpainting and outpainting.',
+    displayName: 'Titan Image Generator V1',
+    enabled: true,
+    id: 'amazon.titan-image-generator-v1',
+    parameters: titanImageParameters,
+    pricing: {
+      units: [
+        {
+          name: 'imageGeneration',
+          rate: 0.008,
+          strategy: 'fixed',
+          unit: 'image',
+        },
+      ],
+    },
+    releasedAt: '2024-04-01',
+    type: 'image',
+  },
+  {
+    description:
+      'Amazon Titan Image Generator V2 with enhanced capabilities including color-guided generation, background removal, and improved image quality.',
+    displayName: 'Titan Image Generator V2',
+    enabled: true,
+    id: 'amazon.titan-image-generator-v2:0',
+    parameters: titanImageParameters,
+    pricing: {
+      units: [
+        {
+          name: 'imageGeneration',
+          rate: 0.01,
+          strategy: 'fixed',
+          unit: 'image',
+        },
+      ],
+    },
+    releasedAt: '2024-11-01',
+    type: 'image',
+  },
+];
+
+export const allModels = [...bedrockChatModels, ...bedrockImageModels];
 
 export default allModels;
