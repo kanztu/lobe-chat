@@ -743,10 +743,22 @@ export const createRuntimeExecutors = (
       log('[%s:%d] Creating aborted tool message for %s', operationId, stepIndex, toolName);
 
       try {
+        // Check if parent message exists before setting parentId
+        let validParentId = null;
+        if (parentMessageId) {
+          try {
+            const parentExists = await ctx.messageModel.findById(parentMessageId);
+            validParentId = parentExists ? parentMessageId : null;
+          } catch {
+            // Parent doesn't exist, use null
+            validParentId = null;
+          }
+        }
+
         const toolMessage = await ctx.messageModel.create({
           agentId: state.metadata!.agentId!,
           content: 'Tool execution was aborted by user.',
-          parentId: parentMessageId,
+          parentId: validParentId,
           plugin: toolPayload as any,
           pluginIntervention: { status: 'aborted' },
           role: 'tool',
