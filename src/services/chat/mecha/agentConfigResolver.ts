@@ -203,12 +203,15 @@ export const resolveAgentConfig = (ctx: AgentConfigResolverContext): ResolvedAge
       };
     }
 
-    // Not in page scope - return standard config
+    // Not in page scope - filter out page-agent tools
+    // Page modification tools should only be available when editing a page
+    const filteredPlugins = finalPlugins.filter((plugin) => plugin !== PageAgentIdentifier);
+
     return {
       agentConfig: finalAgentConfig,
       chatConfig: finalChatConfig,
       isBuiltinAgent: false,
-      plugins: finalPlugins,
+      plugins: filteredPlugins,
     };
   }
 
@@ -308,6 +311,11 @@ export const resolveAgentConfig = (ctx: AgentConfigResolverContext): ResolvedAge
       ...resolvedChatConfig,
       enableHistoryCount: false,
     };
+  } else if (ctx.scope !== 'page' && slug !== BUILTIN_AGENT_SLUGS.pageAgent) {
+    // === Page Editor Tool Filtering ===
+    // When builtin agent is NOT in page editor scope, filter out page-agent tools
+    // Page modification tools should only be available when editing a page
+    finalPlugins = finalPlugins.filter((plugin) => plugin !== PageAgentIdentifier);
   }
 
   // Merge runtime systemRole into agent config

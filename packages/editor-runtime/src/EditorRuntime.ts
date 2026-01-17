@@ -68,7 +68,10 @@ export class EditorRuntime {
    */
   private getEditor(): IEditor {
     if (!this.editor) {
-      throw new Error('Editor not initialized. Please set the editor instance first.');
+      throw new Error(
+        'Page modification tools are only available when editing a page. ' +
+          'Please open the page in the Page Editor to modify it.'
+      );
     }
     return this.editor;
   }
@@ -78,7 +81,10 @@ export class EditorRuntime {
    */
   private getTitleHandlers(): { getter: () => string; setter: (title: string) => void } {
     if (!this.titleSetter || !this.titleGetter) {
-      throw new Error('Title handlers not initialized. Please set the title handlers first.');
+      throw new Error(
+        'Page title operations are only available when editing a page. ' +
+          'Please open the page in the Page Editor to modify the title.'
+      );
     }
     return { getter: this.titleGetter, setter: this.titleSetter };
   }
