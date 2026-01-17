@@ -93,8 +93,8 @@ export const DATA_EXPORT_CONFIG = {
     { table: 'generations' },
 
     // Authentication (selective)
-    { table: 'accounts' },
-    { table: 'auth_sessions' },
+    { table: 'account' },  // Better-Auth accounts table
+    { table: 'session' },  // Better-Auth sessions table (maps to 'auth_sessions')
     { table: 'passkey' },
     // { table: 'two_factor' },  // Excluded - sensitive, would need encryption
     // { table: 'verifications' },  // Excluded - temporary
