@@ -744,14 +744,14 @@ export const createRuntimeExecutors = (
 
       try {
         // Check if parent message exists before setting parentId
-        let validParentId = null;
+        let validParentId: string | undefined = undefined;
         if (parentMessageId) {
           try {
             const parentExists = await ctx.messageModel.findById(parentMessageId);
-            validParentId = parentExists ? parentMessageId : null;
+            validParentId = parentExists ? parentMessageId : undefined;
           } catch {
-            // Parent doesn't exist, use null
-            validParentId = null;
+            // Parent doesn't exist, use undefined
+            validParentId = undefined;
           }
         }
 
