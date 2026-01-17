@@ -328,29 +328,28 @@ describe('DataExporterRepos', () => {
       expect(result.sessions[0]).not.toHaveProperty('userId', anotherUserId);
       expect(result.sessions[0]).toHaveProperty('id', 'another-session-id');
     });
-  });
-});
 
-  it('should export all configured tables', async () => {
-    const dataExporter = new DataExporterRepos(db, userId);
-    const result = await dataExporter.export();
+    it('should export all configured tables', async () => {
+      const dataExporter = new DataExporterRepos(db, userId);
+      const result = await dataExporter.export();
 
-    // Verify we export a significant number of tables
-    const exportedTables = Object.keys(result);
-    expect(exportedTables.length).toBeGreaterThanOrEqual(30);
+      // Verify we export a significant number of tables
+      const exportedTables = Object.keys(result);
+      expect(exportedTables.length).toBeGreaterThanOrEqual(30);
 
-    // Verify key tables are present
-    expect(result).toHaveProperty('messages');
-    expect(result).toHaveProperty('sessions');
-    expect(result).toHaveProperty('agents');
-    expect(result).toHaveProperty('topics');
-    expect(result).toHaveProperty('userSettings');
+      // Verify key tables are present
+      expect(result).toHaveProperty('messages');
+      expect(result).toHaveProperty('sessions');
+      expect(result).toHaveProperty('agents');
+      expect(result).toHaveProperty('topics');
+      expect(result).toHaveProperty('userSettings');
 
-    // Verify newly added tables
-    expect(result).toHaveProperty('files');
-    expect(result).toHaveProperty('documents');
-    expect(result).toHaveProperty('knowledgeBases');
-    expect(result).toHaveProperty('chatGroups');
-    expect(result).toHaveProperty('asyncTasks');
+      // Verify newly added tables
+      expect(result).toHaveProperty('files');
+      expect(result).toHaveProperty('documents');
+      expect(result).toHaveProperty('knowledgeBases');
+      expect(result).toHaveProperty('chatGroups');
+      expect(result).toHaveProperty('asyncTasks');
+    });
   });
 });
