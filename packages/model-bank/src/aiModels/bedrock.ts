@@ -1,4 +1,5 @@
-import { AIChatModelCard } from '../types/aiModel';
+import { ModelParamsSchema } from '../standard-parameters';
+import { AIChatModelCard, AIImageModelCard } from '../types/aiModel';
 
 const bedrockChatModels: AIChatModelCard[] = [
   {
