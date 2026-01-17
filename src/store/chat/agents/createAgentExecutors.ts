@@ -799,10 +799,26 @@ export const createAgentExecutors = (context: {
           toolName,
         );
 
+        // Check if parent message exists before setting parentId
+        let validParentId: string | undefined = undefined;
+        if (parentMessageId) {
+          const messages = context.get().dbMessagesMap[context.messageKey] || [];
+          const parentExists = messages.find((m) => m.id === parentMessageId);
+          validParentId = parentExists ? parentMessageId : undefined;
+          
+          if (!parentExists) {
+            log(
+              '[%s][resolve_aborted_tools] Parent message %s not found, creating tool message without parent',
+              sessionLogId,
+              parentMessageId,
+            );
+          }
+        }
+
         const toolMessageParams: CreateMessageParams = {
           content: 'Tool execution was aborted by user.',
           groupId: opContext.groupId,
-          parentId: parentMessageId,
+          parentId: validParentId,
           plugin: toolPayload,
           pluginIntervention: { status: 'aborted' },
           role: 'tool',
