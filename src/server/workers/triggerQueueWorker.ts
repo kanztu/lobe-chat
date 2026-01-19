@@ -24,10 +24,53 @@ export class TriggerQueueWorker {
     }
 
     this.isRunning = true;
+
+    // Wait for database tables to be ready (migrations might still be running)
+    await this.waitForTables();
+
     console.log('🚀 Trigger Queue Worker started');
 
     // Run both loops in parallel
     await Promise.all([this.cronSchedulerLoop(), this.queueProcessorLoop()]);
+  }
+
+  /**
+   * Waits for database tables to exist before starting worker
+   * Handles race condition where worker starts before migrations complete
+   */
+  private async waitForTables() {
+    const maxWaitTime = 30000; // 30 seconds max
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxWaitTime) {
+      try {
+        const db = await getServerDB();
+
+        // Check if agent_trigger_queue table exists
+        const result = await db.execute(sql`
+          SELECT EXISTS (
+            SELECT FROM pg_tables
+            WHERE schemaname = 'public'
+            AND tablename = 'agent_trigger_queue'
+          );
+        `);
+
+        const exists = result.rows[0]?.exists;
+
+        if (exists) {
+          console.log('✅ Database tables ready');
+          return;
+        }
+
+        console.log('⏳ Waiting for migrations to complete...');
+        await this.sleep(1000);
+      } catch (error) {
+        console.warn('Waiting for database connection...', error instanceof Error ? error.message : '');
+        await this.sleep(2000);
+      }
+    }
+
+    throw new Error('Timeout waiting for database tables. Migrations may have failed.');
   }
 
   /**
