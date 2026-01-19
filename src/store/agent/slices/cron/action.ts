@@ -1,4 +1,3 @@
-import { ENABLE_BUSINESS_FEATURES } from '@lobechat/business-const';
 import type { SWRResponse } from 'swr';
 import { type StateCreator } from 'zustand/vanilla';
 
@@ -71,7 +70,7 @@ export const createCronSlice: StateCreator<
 
   useFetchCronTopicsWithJobInfo: (agentId) =>
     useClientDataSWR<CronTopicGroupWithJobInfo[]>(
-      ENABLE_BUSINESS_FEATURES && agentId ? [FETCH_CRON_TOPICS_WITH_JOB_INFO_KEY, agentId] : null,
+      agentId ? [FETCH_CRON_TOPICS_WITH_JOB_INFO_KEY, agentId] : null,
       async ([, id]: [string, string]) => {
         const [cronJobsResult, cronTopicsGroups] = await Promise.all([
           lambdaClient.agentCronJob.findByAgent.query({ agentId: id }),
