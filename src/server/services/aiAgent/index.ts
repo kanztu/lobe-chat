@@ -64,9 +64,11 @@ function formatErrorForMetadata(error: unknown): Record<string, any> | undefined
 interface InternalExecAgentParams extends ExecAgentParams {
   /** Cron job ID that triggered this execution (if trigger is 'cron') */
   cronJobId?: string;
+  /** Trigger ID that triggered this execution (if trigger is 'trigger') */
+  triggerId?: string;
   /** Step lifecycle callbacks for operation tracking (server-side only) */
   stepCallbacks?: StepLifecycleCallbacks;
-  /** Topic creation trigger source ('cron' | 'chat' | 'api') */
+  /** Topic creation trigger source ('cron' | 'chat' | 'api' | 'trigger') */
   trigger?: string;
   /**
    * User intervention configuration
@@ -134,6 +136,7 @@ export class AiAgentService {
       stepCallbacks,
       trigger,
       cronJobId,
+      triggerId,
       userInterventionConfig,
     } = params;
 
@@ -161,8 +164,12 @@ export class AiAgentService {
     // 2. Handle topic creation: if no topicId provided, create a new topic; otherwise reuse existing
     let topicId = appContext?.topicId;
     if (!topicId) {
-      // Prepare metadata with cronJobId if provided
-      const metadata = cronJobId ? { cronJobId } : undefined;
+      // Prepare metadata with cronJobId or triggerId if provided
+      const metadata = cronJobId 
+        ? { cronJobId } 
+        : triggerId 
+          ? { triggerId } 
+          : undefined;
 
       const newTopic = await this.topicModel.create({
         agentId: resolvedAgentId,
@@ -172,10 +179,11 @@ export class AiAgentService {
       });
       topicId = newTopic.id;
       log(
-        'execAgent: created new topic %s with trigger %s, cronJobId %s',
+        'execAgent: created new topic %s with trigger %s, cronJobId %s, triggerId %s',
         topicId,
         trigger || 'default',
         cronJobId || 'none',
+        triggerId || 'none',
       );
     } else {
       log('execAgent: reusing existing topic %s', topicId);
