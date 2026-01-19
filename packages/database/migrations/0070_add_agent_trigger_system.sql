@@ -56,9 +56,9 @@ CREATE INDEX IF NOT EXISTS idx_queue_user ON agent_trigger_queue(user_id);
 CREATE INDEX IF NOT EXISTS idx_queue_topic ON agent_trigger_queue(topic_id);
 CREATE INDEX IF NOT EXISTS idx_queue_completed_at ON agent_trigger_queue(completed_at) WHERE status IN ('completed', 'failed');
 
--- Part 7: Add foreign key constraint (if tables support it)
+-- Part 7: Add foreign key constraint
 ALTER TABLE agent_trigger_queue
-  ADD CONSTRAINT IF NOT EXISTS fk_trigger_queue_trigger
+  ADD CONSTRAINT fk_trigger_queue_trigger
     FOREIGN KEY (trigger_id) REFERENCES agent_triggers(id) ON DELETE CASCADE;
 
 -- Part 8: Add comments
