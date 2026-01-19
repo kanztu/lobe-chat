@@ -237,8 +237,3 @@ export class TriggerQueueWorker {
 
 // Export singleton instance
 export const triggerQueueWorker = new TriggerQueueWorker();
-
-// Auto-start in production
-if (process.env.NODE_ENV === 'production' && process.env.START_WORKER === 'true') {
-  triggerQueueWorker.start().catch(console.error);
-}
