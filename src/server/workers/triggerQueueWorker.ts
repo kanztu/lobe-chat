@@ -92,10 +92,10 @@ export class TriggerQueueWorker {
         }
 
         // Check every 30 seconds
-        await this.sleep(30000);
+        await this.sleep(30_000);
       } catch (error) {
         console.error('Cron scheduler error:', error);
-        await this.sleep(60000);
+        await this.sleep(60_000);
       }
     }
   }
@@ -214,11 +214,9 @@ export class TriggerQueueWorker {
     }
 
     // Check weekdays (0=Sunday, 1=Monday, etc.)
-    if (conditions.weekdays?.length) {
-      if (!conditions.weekdays.includes(now.getDay())) {
+    if (conditions.weekdays?.length && !conditions.weekdays.includes(now.getDay())) {
         return false;
       }
-    }
 
     // TODO: Check maxExecutionsPerDay
 
@@ -226,7 +224,9 @@ export class TriggerQueueWorker {
   }
 
   private sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise<void>((resolve) => {
+      setTimeout(resolve, ms);
+    });
   }
 
   stop() {

@@ -5,7 +5,6 @@
 
 import type { EnqueueJobParams, TriggerQueueJob, TriggerQueueStatus } from '@lobechat/types';
 import { and, eq, lte, sql } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
 
 import { agentTriggerQueue } from '@/database/schemas';
 import { getServerDB } from '@/database/server';
@@ -90,7 +89,7 @@ export async function getNextPendingJob(): Promise<TriggerQueueJob | undefined> 
     FOR UPDATE SKIP LOCKED
   `);
 
-  return result.rows[0] as TriggerQueueJob | undefined;
+  return result.rows[0] as unknown as TriggerQueueJob | undefined;
 }
 
 /**
@@ -136,7 +135,7 @@ export async function retryJob(jobId: string, currentAttempts: number): Promise<
   const db = await getServerDB();
 
   // Exponential backoff: 2^attempts * 1000ms (max 60s)
-  const delay = Math.min(1000 * 2 ** currentAttempts, 60000);
+  const delay = Math.min(1000 * 2 ** currentAttempts, 60_000);
   const scheduledAt = new Date(Date.now() + delay);
 
   return db

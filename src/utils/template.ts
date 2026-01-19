@@ -46,7 +46,7 @@ export function interpolatePrompt(
   }
 
   // Replace {{variable}} placeholders
-  return template.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+  return template.replaceAll(/{{(\w+)}}/g, (match, varName) => {
     const value = variables[varName];
 
     if (value === null || value === undefined) {
@@ -91,7 +91,7 @@ export function validateJsonPath(jsonPath: string, samplePayload?: any): boolean
  * // => ["type", "number", "title"]
  */
 export function extractVariables(template: string): string[] {
-  const regex = /\{\{(\w+)\}\}/g;
+  const regex = /{{(\w+)}}/g;
   const variables: string[] = [];
   let match;
 
@@ -115,12 +115,12 @@ export function testPayloadMapping(
   payload: any,
   mapping: PayloadMapping,
 ): {
-  success: boolean;
-  result: string;
-  variables: Record<string, { value: any; extracted: boolean }>;
   errors: string[];
+  result: string;
+  success: boolean;
+  variables: Record<string, { extracted: boolean, value: any; }>;
 } {
-  const variables: Record<string, { value: any; extracted: boolean }> = {};
+  const variables: Record<string, { extracted: boolean, value: any; }> = {};
   const errors: string[] = [];
 
   // Extract variables
