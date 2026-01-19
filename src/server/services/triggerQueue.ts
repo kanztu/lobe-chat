@@ -4,7 +4,7 @@
  */
 
 import type { EnqueueJobParams, TriggerQueueJob, TriggerQueueStatus } from '@lobechat/types';
-import { and, eq, lte } from 'drizzle-orm';
+import { and, eq, lte, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { agentTriggerQueue } from '@/database/schemas';
@@ -69,25 +69,28 @@ export async function enqueueTriggerJob(
 }
 
 /**
- * Gets next pending job from queue
+ * Gets next pending job from queue (with locking for multiple workers)
+ *
+ * Uses FOR UPDATE SKIP LOCKED to prevent race conditions when multiple workers
+ * are polling the same queue. Only one worker will get each job.
  *
  * @returns Next pending job or undefined
  */
 export async function getNextPendingJob(): Promise<TriggerQueueJob | undefined> {
   const db = await getServerDB();
 
-  return db
-    .select()
-    .from(agentTriggerQueue)
-    .where(
-      and(
-        eq(agentTriggerQueue.status, 'pending'),
-        lte(agentTriggerQueue.scheduledAt, new Date()),
-      ),
-    )
-    .orderBy(agentTriggerQueue.scheduledAt)
-    .limit(1)
-    .then((rows) => rows[0]);
+  // Use raw SQL for FOR UPDATE SKIP LOCKED support
+  // This prevents multiple workers from grabbing the same job
+  const result = await db.execute(sql`
+    SELECT * FROM agent_trigger_queue
+    WHERE status = 'pending'
+      AND scheduled_at <= NOW()
+    ORDER BY scheduled_at
+    LIMIT 1
+    FOR UPDATE SKIP LOCKED
+  `);
+
+  return result.rows[0] as TriggerQueueJob | undefined;
 }
 
 /**

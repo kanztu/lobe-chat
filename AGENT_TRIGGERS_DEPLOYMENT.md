@@ -17,13 +17,15 @@ The event-driven agent trigger system allows agents to be automatically triggere
 #### Required:
 ```bash
 DATABASE_URL=postgres://user:pass@host:5432/dbname
-DATABASE_DRIVER=node
+DATABASE_DRIVER=node  # Also auto-starts trigger queue worker
 ```
 
-#### New - Queue Worker:
+#### Optional - Disable Worker:
 ```bash
-START_WORKER=true  # Enable background trigger queue worker
+START_WORKER=false  # Disable worker (for development/serverless/separate worker container)
 ```
+
+**Note:** Worker starts automatically when `DATABASE_DRIVER=node`. Only set `START_WORKER=false` if you want to disable it.
 
 ### What Happens on Docker Startup
 
@@ -35,12 +37,14 @@ START_WORKER=true  # Enable background trigger queue worker
 ✅ database migration pass.
 ```
 
-**2. Worker Initialization (if START_WORKER=true) ✅**
+**2. Worker Initialization (automatic in database mode) ✅**
 ```
 🚀 Trigger Queue Worker started
   → Cron scheduler loop: checks every 30s
   → Queue processor loop: processes every 1s
 ```
+
+**Note:** Worker starts automatically because `DATABASE_DRIVER=node` is set.
 
 **3. Server Start ✅**
 ```
@@ -55,9 +59,11 @@ docker run -d \
   -p 3210:3210 \
   -e DATABASE_URL="postgres://user:pass@host:5432/lobe_chat" \
   -e DATABASE_DRIVER="node" \
-  -e START_WORKER="true" \
   -e KEY_VAULTS_SECRET="your-secret-key" \
   lobe-chat:latest
+
+# Note: Worker starts automatically with DATABASE_DRIVER=node
+# To disable: add -e START_WORKER="false"
 ```
 
 ### Docker Compose
@@ -71,18 +77,18 @@ services:
     ports:
       - "3210:3210"
     environment:
-      # Database
+      # Database (also auto-starts worker)
       DATABASE_URL: postgres://user:pass@postgres:5432/lobe_chat
       DATABASE_DRIVER: node
-
-      # Trigger System
-      START_WORKER: "true"
 
       # Security
       KEY_VAULTS_SECRET: your-secret-key
 
       # Other config...
       NODE_ENV: production
+
+      # Optional: Disable worker if needed
+      # START_WORKER: "false"
     depends_on:
       - postgres
 
@@ -102,33 +108,57 @@ volumes:
 
 ---
 
-## Understanding START_WORKER
+## Understanding Worker Auto-Start
 
-### What It Does
+### Default Behavior
 
-**When `START_WORKER=true`:**
-- ✅ Starts `TriggerQueueWorker` in background
+**Worker starts automatically when:**
+- ✅ `DATABASE_DRIVER=node` (database mode detected)
+- ✅ `START_WORKER` is not set OR not `false`
+
+**This means:**
+- ✅ Docker deployments: Worker runs by default
+- ✅ Self-hosted: Worker runs by default
+- ✅ No configuration needed for typical deployments
+
+**Worker does NOT start when:**
+- ❌ `DATABASE_DRIVER` is not set (serverless/static mode)
+- ❌ `START_WORKER=false` (explicitly disabled)
+
+### What the Worker Does
+
+**When running:**
 - ✅ Runs **cron scheduler loop** (checks for due cron triggers every 30s)
 - ✅ Runs **queue processor loop** (processes webhook/API jobs every 1s)
 - ✅ Executes agents automatically
 - ✅ Updates execution statistics
+- ✅ Handles retries with exponential backoff
 
-**When `START_WORKER` is not set or `false`:**
+**When disabled:**
 - ❌ No background processing
 - ❌ Cron triggers won't execute
 - ❌ Webhook jobs will queue but never process
 - ✅ Webhooks still accepted (queued for later)
 - ✅ UI still works for creating/managing triggers
 
+### When to Disable (START_WORKER=false)
+
+**Use cases for disabling:**
+1. **Development:** Don't want background loops during local dev
+2. **Serverless (Vercel):** Can't support long-running processes
+3. **Separate worker container:** Web and worker run in different containers
+4. **Testing:** Unit tests don't need worker running
+
 ### Deployment Scenarios
 
-#### Scenario 1: Single Docker Container (Recommended for Small Scale)
+#### Scenario 1: Single Docker Container (Recommended for Most Users)
 ```bash
-START_WORKER=true
+DATABASE_DRIVER=node  # Worker auto-starts
 ```
-- Worker runs in same container as Next.js server
-- Simple deployment, one process
+- Worker runs automatically in same container as Next.js server
+- Simple deployment, zero configuration
 - Good for: < 1000 triggers, < 10,000 executions/day
+- **This is the default behavior - just works!**
 
 #### Scenario 2: Separate Worker Container (Recommended for Scale)
 ```yaml
@@ -136,19 +166,21 @@ services:
   lobe-chat-web:
     image: lobe-chat:latest
     environment:
-      START_WORKER: "false"  # Web server only
       DATABASE_URL: ...
+      DATABASE_DRIVER: node
+      START_WORKER: "false"  # Disable worker (web server only)
 
   lobe-chat-worker:
     image: lobe-chat:latest
     environment:
-      START_WORKER: "true"   # Worker only
       DATABASE_URL: ...
-    command: ["/bin/node", "-e", "require('./server/workers/triggerQueueWorker').triggerQueueWorker.start()"]
+      DATABASE_DRIVER: node  # Worker auto-starts
+    # No START_WORKER needed - auto-starts by default
 ```
 - Separate scaling: scale web and worker independently
 - Better resource allocation
 - Good for: > 1000 triggers, > 10,000 executions/day
+- **Note:** FOR UPDATE SKIP LOCKED prevents duplicate job processing
 
 #### Scenario 3: Serverless (Vercel) - Alternative Approach
 ```yaml
@@ -316,18 +348,20 @@ SELECT * FROM agent_trigger_queue WHERE status='pending';
 ```bash
 # Required
 DATABASE_URL=...
-DATABASE_DRIVER=node
-START_WORKER=true  # ← NEW FLAG
+DATABASE_DRIVER=node  # Worker auto-starts
 
 # Recommended
 NODE_ENV=production
 NEXT_TELEMETRY_DISABLED=1
+
+# Optional: Disable worker if running separate worker container
+# START_WORKER=false
 ```
 
 ### For Kubernetes:
 
 ```yaml
-# Deployment with worker
+# Deployment with auto-starting worker
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -346,16 +380,16 @@ spec:
               name: db-secret
               key: url
         - name: DATABASE_DRIVER
-          value: "node"
-        - name: START_WORKER
-          value: "true"  # ← NEW FLAG
+          value: "node"  # Worker auto-starts
+        # Worker auto-starts in all replicas
+        # FOR UPDATE SKIP LOCKED prevents duplicate processing
 ```
 
 ### For Vercel/Serverless:
 
+- **Worker:** Auto-disabled (DATABASE_DRIVER not set in serverless mode)
 - **Migrations:** Run via `bun run db:migrate` in CI/CD before deploy
-- **Worker:** Use Vercel Cron or external scheduler (GitHub Actions)
-- **START_WORKER:** Set to `false` (serverless doesn't support long-running processes)
+- **Alternative:** Use Vercel Cron or external scheduler (GitHub Actions) to trigger periodic checks
 
 ---
 
@@ -385,17 +419,20 @@ DATABASE_URL="postgres://user:pass@host:5432/db?pool_min=5&pool_max=20"
 
 ## Summary
 
-**Answer: YES, `START_WORKER` is a NEW flag introduced in this implementation.**
+**Worker Auto-Start Behavior:**
+- ✅ **Starts automatically** when `DATABASE_DRIVER=node` (database mode)
+- ✅ No `START_WORKER` flag needed for typical deployments
+- ✅ Set `START_WORKER=false` to disable (optional, for edge cases)
 
-**What it does:**
-- ✅ Enables background trigger queue worker
-- ✅ Auto-starts via Next.js instrumentation hook
-- ✅ Runs cron scheduler + queue processor
-- ✅ Processes webhooks and executes agents automatically
+**What the worker does:**
+- ✅ Processes webhook triggers automatically
+- ✅ Executes scheduled cron jobs
+- ✅ Handles retries and error recovery
+- ✅ Works across multiple replicas (FOR UPDATE SKIP LOCKED)
 
 **Docker deployments:**
 - ✅ Migrations run automatically (no manual intervention)
-- ✅ Worker starts automatically if `START_WORKER=true`
+- ✅ Worker starts automatically (no configuration needed)
 - ✅ All triggered agents execute in background
 
-**Just add `START_WORKER=true` to your Docker environment variables and you're done!**
+**Just deploy - it works out of the box!** 🚀
