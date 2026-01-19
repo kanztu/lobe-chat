@@ -8,9 +8,10 @@ import { agents } from './agent';
 import { chatGroups } from './chatGroup';
 import { users } from './user';
 
-// Agent cron jobs table - supports multiple cron jobs per agent
+// Agent triggers table (renamed from agent_cron_jobs in migration 0070)
+// Supports multiple triggers per agent: cron, webhook, api, manual
 export const agentCronJobs = pgTable(
-  'agent_cron_jobs',
+  'agent_triggers',
   {
     id: text('id')
       .primaryKey()
@@ -53,13 +54,13 @@ export const agentCronJobs = pgTable(
     ...timestamps,
   },
   (t) => [
-    // Indexes for performance
-    index('agent_cron_jobs_agent_id_idx').on(t.agentId),
-    index('agent_cron_jobs_group_id_idx').on(t.groupId),
-    index('agent_cron_jobs_user_id_idx').on(t.userId),
-    index('agent_cron_jobs_enabled_idx').on(t.enabled),
-    index('agent_cron_jobs_remaining_executions_idx').on(t.remainingExecutions),
-    index('agent_cron_jobs_last_executed_at_idx').on(t.lastExecutedAt),
+    // Indexes for performance (renamed from agent_cron_jobs_* in migration 0070)
+    index('agent_triggers_agent_id_idx').on(t.agentId),
+    index('agent_triggers_group_id_idx').on(t.groupId),
+    index('agent_triggers_user_id_idx').on(t.userId),
+    index('agent_triggers_enabled_idx').on(t.enabled),
+    index('agent_triggers_remaining_executions_idx').on(t.remainingExecutions),
+    index('agent_triggers_last_executed_at_idx').on(t.lastExecutedAt),
   ],
 );
 
