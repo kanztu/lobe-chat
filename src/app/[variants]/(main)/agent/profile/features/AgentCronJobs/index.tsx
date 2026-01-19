@@ -1,6 +1,5 @@
 'use client';
 
-import { ENABLE_BUSINESS_FEATURES } from '@lobechat/business-const';
 import { Flexbox } from '@lobehub/ui';
 import { Typography } from 'antd';
 import { Clock } from 'lucide-react';
@@ -39,8 +38,6 @@ const AgentCronJobs = memo(() => {
     },
     [deleteCronJob],
   );
-
-  if (!ENABLE_BUSINESS_FEATURES) return null;
 
   if (!agentId) {
     return null;

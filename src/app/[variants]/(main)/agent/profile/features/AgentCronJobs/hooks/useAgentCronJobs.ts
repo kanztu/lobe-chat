@@ -1,4 +1,3 @@
-import { ENABLE_BUSINESS_FEATURES } from '@lobechat/business-const';
 import { message } from 'antd';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,8 +19,8 @@ export const useAgentCronJobs = (agentId?: string) => {
     isLoading: loading,
     mutate,
   } = useSWR(
-    ENABLE_BUSINESS_FEATURES && agentId ? `/api/agent-cron-jobs/${agentId}` : null,
-    ENABLE_BUSINESS_FEATURES && agentId ? () => agentCronJobService.getByAgentId(agentId) : null,
+    agentId ? `/api/agent-cron-jobs/${agentId}` : null,
+    agentId ? () => agentCronJobService.getByAgentId(agentId) : null,
     {
       onError: (error) => {
         console.error('Failed to fetch cron jobs:', error);
