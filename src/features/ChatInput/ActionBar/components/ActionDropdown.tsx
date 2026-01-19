@@ -163,7 +163,12 @@ const ActionDropdown = memo<ActionDropdownProps>(
                 return;
               }
 
-              info.domEvent.preventDefault();
+              // Don't preventDefault if clicking on an input element (e.g., file upload)
+              // to allow Upload components to open file pickers
+              const target = info.domEvent.target as HTMLElement;
+              if (target.tagName !== 'INPUT') {
+                info.domEvent.preventDefault();
+              }
               menu.onClick?.(info);
               itemOnClick?.(info);
             },
