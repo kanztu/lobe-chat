@@ -35,16 +35,28 @@ export const useAgentCronJobs = (agentId?: string) => {
       if (!agentId) return;
 
       try {
-        const result = await agentCronJobService.create({
-          ...data,
-          agentId,
-        });
+        // Optimistic update: immediately add to UI before server response
+        const result = await mutate(
+          async () => {
+            // Create on server
+            const result = await agentCronJobService.create({
+              ...data,
+              agentId,
+            });
 
-        if (result.success) {
-          message.success(t('agentCronJobs.createSuccess'));
-          await mutate();
-          return result.data;
-        }
+            if (result.success) {
+              message.success(t('agentCronJobs.createSuccess'));
+              return result; // Return new data from server
+            }
+            throw new Error('Failed to create');
+          },
+          {
+            // Revalidate after creation to get server-generated fields
+            revalidate: true,
+          },
+        );
+
+        return result?.data;
       } catch (error) {
         console.error('Failed to create cron job:', error);
         message.error('Failed to create scheduled task');
@@ -58,13 +70,36 @@ export const useAgentCronJobs = (agentId?: string) => {
   const updateCronJob = useCallback(
     async (id: string, data: UpdateAgentCronJobData) => {
       try {
-        const result = await agentCronJobService.update(id, data);
+        // Optimistic update: immediately update UI before server response
+        await mutate(
+          async (currentData) => {
+            // Update the server
+            const result = await agentCronJobService.update(id, data);
 
-        if (result.success) {
-          message.success(t('agentCronJobs.updateSuccess'));
-          await mutate();
-          return result.data;
-        }
+            if (result.success) {
+              message.success(t('agentCronJobs.updateSuccess'));
+              return result; // Return new data from server
+            }
+            return currentData; // Rollback on failure
+          },
+          {
+            // Optimistically update the UI immediately
+            optimisticData: (currentData) => {
+              if (!currentData?.data) return currentData;
+
+              return {
+                ...currentData,
+                data: currentData.data.map((job) =>
+                  job.id === id ? { ...job, ...data } : job
+                ),
+              };
+            },
+            // Don't revalidate after mutation completes (data is already fresh)
+            revalidate: false,
+            // Rollback on error
+            rollbackOnError: true,
+          },
+        );
       } catch (error) {
         console.error('Failed to update cron job:', error);
         message.error('Failed to update scheduled task');
@@ -78,12 +113,34 @@ export const useAgentCronJobs = (agentId?: string) => {
   const deleteCronJob = useCallback(
     async (id: string) => {
       try {
-        const result = await agentCronJobService.delete(id);
+        // Optimistic update: immediately remove from UI before server response
+        await mutate(
+          async (currentData) => {
+            // Delete from server
+            const result = await agentCronJobService.delete(id);
 
-        if (result.success) {
-          message.success(t('agentCronJobs.deleteSuccess'));
-          await mutate();
-        }
+            if (result.success) {
+              message.success(t('agentCronJobs.deleteSuccess'));
+              return result; // Return new data from server
+            }
+            return currentData; // Rollback on failure
+          },
+          {
+            // Optimistically remove from UI immediately
+            optimisticData: (currentData) => {
+              if (!currentData?.data) return currentData;
+
+              return {
+                ...currentData,
+                data: currentData.data.filter((job) => job.id !== id),
+              };
+            },
+            // Don't revalidate after mutation completes
+            revalidate: false,
+            // Rollback on error
+            rollbackOnError: true,
+          },
+        );
       } catch (error) {
         console.error('Failed to delete cron job:', error);
         message.error('Failed to delete scheduled task');
@@ -107,13 +164,42 @@ export const useAgentCronJobs = (agentId?: string) => {
   const resetExecutions = useCallback(
     async (id: string, newMaxExecutions?: number) => {
       try {
-        const result = await agentCronJobService.resetExecutions(id, newMaxExecutions);
+        // Optimistic update: immediately update execution counts in UI
+        await mutate(
+          async (currentData) => {
+            // Reset on server
+            const result = await agentCronJobService.resetExecutions(id, newMaxExecutions);
 
-        if (result.success) {
-          message.success('Execution counts reset successfully');
-          await mutate();
-          return result.data;
-        }
+            if (result.success) {
+              message.success('Execution counts reset successfully');
+              return result; // Return new data from server
+            }
+            return currentData; // Rollback on failure
+          },
+          {
+            // Optimistically update the UI immediately
+            optimisticData: (currentData) => {
+              if (!currentData?.data) return currentData;
+
+              return {
+                ...currentData,
+                data: currentData.data.map((job) =>
+                  job.id === id
+                    ? {
+                        ...job,
+                        maxExecutions: newMaxExecutions || job.maxExecutions,
+                        remainingExecutions: newMaxExecutions || job.maxExecutions,
+                      }
+                    : job
+                ),
+              };
+            },
+            // Don't revalidate after mutation completes
+            revalidate: false,
+            // Rollback on error
+            rollbackOnError: true,
+          },
+        );
       } catch (error) {
         console.error('Failed to reset executions:', error);
         message.error('Failed to reset execution counts');
