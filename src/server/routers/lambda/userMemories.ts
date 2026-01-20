@@ -855,55 +855,56 @@ export const userMemoriesRouter = router({
     }),
 
   toolAddIdentityMemory: memoryProcedure
-    .input(AddIdentityActionSchema)
+    .input(AddIdentityActionSchema.omit({ memoryLayer: true }))
     .mutation(async ({ input, ctx }) => {
       try {
+        const inputWithLayer = { ...input, memoryLayer: LayersEnum.Identity };
         const { agentRuntime, embeddingModel } = await getEmbeddingRuntime(
           ctx.serverDB,
           ctx.userId,
         );
         const embed = createEmbedder(agentRuntime, embeddingModel);
 
-        const summaryEmbedding = await embed(input.summary);
-        const detailsEmbedding = await embed(input.details);
-        const descriptionEmbedding = await embed(input.withIdentity.description);
+        const summaryEmbedding = await embed(inputWithLayer.summary);
+        const detailsEmbedding = await embed(inputWithLayer.details);
+        const descriptionEmbedding = await embed(inputWithLayer.withIdentity.description);
 
         const identityMetadata: Record<string, unknown> = {};
         if (
-          input.withIdentity.scoreConfidence !== null &&
-          input.withIdentity.scoreConfidence !== undefined
+          inputWithLayer.withIdentity.scoreConfidence !== null &&
+          inputWithLayer.withIdentity.scoreConfidence !== undefined
         ) {
-          identityMetadata.scoreConfidence = input.withIdentity.scoreConfidence;
+          identityMetadata.scoreConfidence = inputWithLayer.withIdentity.scoreConfidence;
         }
         if (
-          input.withIdentity.sourceEvidence !== null &&
-          input.withIdentity.sourceEvidence !== undefined
+          inputWithLayer.withIdentity.sourceEvidence !== null &&
+          inputWithLayer.withIdentity.sourceEvidence !== undefined
         ) {
-          identityMetadata.sourceEvidence = input.withIdentity.sourceEvidence;
+          identityMetadata.sourceEvidence = inputWithLayer.withIdentity.sourceEvidence;
         }
 
         const { identityId, userMemoryId } = await ctx.memoryModel.addIdentityEntry({
           base: {
-            details: input.details,
+            details: inputWithLayer.details,
             detailsVector1024: detailsEmbedding ?? null,
-            memoryCategory: input.memoryCategory,
-            memoryLayer: input.memoryLayer,
-            memoryType: input.memoryType,
+            memoryCategory: inputWithLayer.memoryCategory,
+            memoryLayer: inputWithLayer.memoryLayer,
+            memoryType: inputWithLayer.memoryType,
             metadata: Object.keys(identityMetadata).length > 0 ? identityMetadata : undefined,
-            summary: input.summary,
+            summary: inputWithLayer.summary,
             summaryVector1024: summaryEmbedding ?? null,
-            tags: input.tags,
-            title: input.title,
+            tags: inputWithLayer.tags,
+            title: inputWithLayer.title,
           },
           identity: {
-            description: input.withIdentity.description,
+            description: inputWithLayer.withIdentity.description,
             descriptionVector: descriptionEmbedding ?? null,
-            episodicDate: input.withIdentity.episodicDate,
+            episodicDate: inputWithLayer.withIdentity.episodicDate,
             metadata: Object.keys(identityMetadata).length > 0 ? identityMetadata : undefined,
-            relationship: input.withIdentity.relationship,
-            role: input.withIdentity.role,
-            tags: input.tags,
-            type: input.withIdentity.type,
+            relationship: inputWithLayer.withIdentity.relationship,
+            role: inputWithLayer.withIdentity.role,
+            tags: inputWithLayer.tags,
+            type: inputWithLayer.withIdentity.type,
           },
         });
 
