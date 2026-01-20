@@ -706,17 +706,18 @@ export class TopicModel {
           eq(topics.userId, this.userId),
           eq(topics.agentId, agentId),
           eq(topics.trigger, 'cron'),
-          // Check if metadata contains cronJobId
-          sql`${topics.metadata}->>'cronJobId' IS NOT NULL`,
+          // Check if metadata contains cronJobId (legacy) or triggerId (new trigger system)
+          sql`(${topics.metadata}->>'cronJobId' IS NOT NULL OR ${topics.metadata}->>'triggerId' IS NOT NULL)`,
         ),
       )
       .orderBy(desc(topics.updatedAt));
 
-    // Group topics by cronJobId
+    // Group topics by cronJobId/triggerId (they refer to the same table after migration)
     const groupedTopics = new Map<string, typeof cronTopics>();
 
     cronTopics.forEach((topic) => {
-      const cronJobId = topic.metadata?.cronJobId;
+      // Try triggerId first (new system), fallback to cronJobId (legacy)
+      const cronJobId = topic.metadata?.triggerId || topic.metadata?.cronJobId;
       if (cronJobId) {
         if (!groupedTopics.has(cronJobId)) {
           groupedTopics.set(cronJobId, []);

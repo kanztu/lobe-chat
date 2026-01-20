@@ -197,7 +197,7 @@ export class TriggerQueueWorker {
         autoStart: true,
         prompt: job.prompt,
         queueJobId: job.id, // Pass job ID so agent can update queue when done
-        trigger: 'trigger',
+        trigger: 'cron', // Use 'cron' for UI compatibility (trigger system replaces cron jobs)
         triggerId: job.triggerId,
       });
 
