@@ -64,6 +64,8 @@ function formatErrorForMetadata(error: unknown): Record<string, any> | undefined
 interface InternalExecAgentParams extends ExecAgentParams {
   /** Cron job ID that triggered this execution (if trigger is 'cron') */
   cronJobId?: string;
+  /** Queue job ID for async job tracking (agent will update status when done) */
+  queueJobId?: string;
   /** Trigger ID that triggered this execution (if trigger is 'trigger') */
   triggerId?: string;
   /** Step lifecycle callbacks for operation tracking (server-side only) */
@@ -136,6 +138,7 @@ export class AiAgentService {
       stepCallbacks,
       trigger,
       cronJobId,
+      queueJobId,
       triggerId,
       userInterventionConfig,
     } = params;
@@ -391,18 +394,45 @@ export class AiAgentService {
       },
     };
 
-    // 14. Log final operation parameters summary
+    // 14. Create queue update callbacks if queueJobId provided
+    let finalStepCallbacks = stepCallbacks;
+    if (queueJobId) {
+      const queueUpdateCallbacks = this.createQueueUpdateCallbacks(
+        queueJobId,
+        triggerId,
+        topicId,
+      );
+
+      // Merge with existing callbacks if any
+      if (stepCallbacks) {
+        finalStepCallbacks = {
+          onAfterStep: async (ctx) => {
+            await stepCallbacks.onAfterStep?.(ctx);
+            await queueUpdateCallbacks.onAfterStep?.(ctx);
+          },
+          onComplete: async (ctx) => {
+            await stepCallbacks.onComplete?.(ctx);
+            await queueUpdateCallbacks.onComplete?.(ctx);
+          },
+        };
+      } else {
+        finalStepCallbacks = queueUpdateCallbacks;
+      }
+    }
+
+    // 15. Log final operation parameters summary
     log(
-      'execAgent: creating operation %s with params: model=%s, provider=%s, tools=%d, messages=%d, manifests=%d',
+      'execAgent: creating operation %s with params: model=%s, provider=%s, tools=%d, messages=%d, manifests=%d, queueJobId=%s',
       operationId,
       model,
       provider,
       tools?.length ?? 0,
       processedMessages.length,
       Object.keys(toolManifestMap).length,
+      queueJobId || 'none',
     );
 
-    // 15. Create operation using AgentRuntimeService
+    // 16. Create operation using AgentRuntimeService
     // Wrap in try-catch to handle operation startup failures (e.g., QStash unavailable)
     // If createOperation fails, we still have valid messages that need error info
     try {
@@ -419,7 +449,7 @@ export class AiAgentService {
         initialMessages: processedMessages,
         modelRuntimeConfig: { model, provider },
         operationId,
-        stepCallbacks,
+        stepCallbacks: finalStepCallbacks,
         toolManifestMap,
         toolSourceMap,
         tools,
@@ -779,6 +809,81 @@ export class AiAgentService {
   private calculateTotalTokens(usage?: AgentState['usage']): number | undefined {
     if (!usage) return undefined;
     return usage.llm?.tokens?.total;
+  }
+
+  /**
+   * Create step lifecycle callbacks for updating trigger queue status
+   * This allows async jobs to update their completion status automatically
+   *
+   * @param queueJobId - The queue job ID to update
+   * @param triggerId - The trigger ID (optional, for updating trigger stats)
+   * @param topicId - The topic ID created for this execution
+   */
+  private createQueueUpdateCallbacks(
+    queueJobId: string,
+    triggerId?: string,
+    topicId?: string,
+  ): StepLifecycleCallbacks {
+    return {
+      onComplete: async ({ finalState, reason }) => {
+        try {
+          // Dynamically import to avoid circular dependency
+          const { updateJobStatus } = await import('../services/triggerQueue');
+          const { agentTriggers } = await import('@/database/schemas');
+          const { eq, sql } = await import('drizzle-orm');
+          const { getServerDB } = await import('@/database/server');
+
+          // Update job status based on completion reason
+          if (reason === 'done') {
+            await updateJobStatus(queueJobId, 'completed', {
+              completedAt: new Date(),
+              topicId,
+            });
+
+            // Update trigger stats on success
+            if (triggerId) {
+              const db = await getServerDB();
+              await db
+                .update(agentTriggers)
+                .set({
+                  enabled: sql`
+                    CASE
+                      WHEN ${agentTriggers.remainingExecutions} <= 1 THEN FALSE
+                      ELSE ${agentTriggers.enabled}
+                    END
+                  `,
+                  lastExecutedAt: new Date(),
+                  remainingExecutions: sql`
+                    CASE
+                      WHEN ${agentTriggers.remainingExecutions} IS NULL THEN NULL
+                      ELSE GREATEST(${agentTriggers.remainingExecutions} - 1, 0)
+                    END
+                  `,
+                  totalExecutions: sql`${agentTriggers.totalExecutions} + 1`,
+                })
+                .where(eq(agentTriggers.id, triggerId));
+            }
+
+            log('execAgent: queue job %s completed successfully', queueJobId);
+          } else {
+            // Agent failed or was interrupted
+            const errorMessage =
+              finalState.error instanceof Error
+                ? finalState.error.message
+                : String(finalState.error || `Agent ${reason}`);
+
+            await updateJobStatus(queueJobId, 'failed', {
+              completedAt: new Date(),
+              error: errorMessage,
+            });
+
+            log('execAgent: queue job %s failed with reason: %s', queueJobId, reason);
+          }
+        } catch (error) {
+          console.error('execAgent: failed to update queue job status:', error);
+        }
+      },
+    };
   }
 
   /**

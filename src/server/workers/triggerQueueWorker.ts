@@ -118,9 +118,18 @@ export class TriggerQueueWorker {
                 continue;
               }
 
-              // Enqueue job
+              // Update lastExecutedAt BEFORE enqueueing to prevent duplicate triggers
+              // This ensures next cron check calculates from this timestamp
+              await db
+                .update(agentTriggers)
+                .set({ lastExecutedAt: now })
+                .where(eq(agentTriggers.id, trigger.id));
+
+              // Enqueue job with idempotency key (minute-level granularity)
+              const idempotencyKey = `cron_${trigger.id}_${Math.floor(now.getTime() / 60000)}`;
               await enqueueTriggerJob({
                 agentId: trigger.agentId,
+                idempotencyKey,
                 payload: null,
                 prompt: trigger.content,
                 triggerId: trigger.id,
@@ -180,45 +189,26 @@ export class TriggerQueueWorker {
 
       console.log(`🔄 Processing job ${job.id} for trigger ${job.triggerId}`);
 
-      // Execute agent
+      // Execute agent (async - will complete later via callback)
       const aiAgentService = new AiAgentService(db, job.userId);
 
       const result = await aiAgentService.execAgent({
         agentId: job.agentId,
         autoStart: true,
         prompt: job.prompt,
+        queueJobId: job.id, // Pass job ID so agent can update queue when done
         trigger: 'trigger',
         triggerId: job.triggerId,
       });
 
-      // Mark as completed
-      await updateJobStatus(job.id, 'completed', {
-        completedAt: new Date(),
-        topicId: result.topicId,
-      });
-
-      // Update trigger stats
-      await db
-        .update(agentTriggers)
-        .set({
-          enabled: sql`
-            CASE
-              WHEN ${agentTriggers.remainingExecutions} <= 1 THEN FALSE
-              ELSE ${agentTriggers.enabled}
-            END
-          `,
-          lastExecutedAt: new Date(),
-          remainingExecutions: sql`
-            CASE
-              WHEN ${agentTriggers.remainingExecutions} IS NULL THEN NULL
-              ELSE GREATEST(${agentTriggers.remainingExecutions} - 1, 0)
-            END
-          `,
-          totalExecutions: sql`${agentTriggers.totalExecutions} + 1`,
-        })
-        .where(eq(agentTriggers.id, job.triggerId));
-
-      console.log(`✅ Completed job ${job.id}`);
+      // Don't mark as completed here - agent will update status when it finishes
+      // Just log that we started it successfully
+      if (result.success) {
+        console.log(`🚀 Started job ${job.id}, operation ${result.operationId}`);
+      } else {
+        // Agent failed to start - this is a startup error, mark as failed
+        throw new Error(result.error || 'Agent failed to start');
+      }
     } catch (error) {
       console.error(`❌ Job ${job.id} failed:`, error);
 
