@@ -20,7 +20,7 @@ const AgentCronJobs = memo(() => {
   const agentId = useAgentStore((s) => s.activeAgentId);
   const router = useQueryRoute();
 
-  const { cronJobs, loading, deleteCronJob } = useAgentCronJobs(agentId);
+  const { cronJobs, deleteCronJob } = useAgentCronJobs(agentId);
 
   // Edit: Navigate to cron job detail page
   const handleEdit = useCallback(
@@ -61,8 +61,6 @@ const AgentCronJobs = memo(() => {
 
       <CronJobCards
         agentId={agentId}
-        cronJobs={cronJobs}
-        loading={loading}
         onDelete={handleDelete}
         onEdit={handleEdit}
       />

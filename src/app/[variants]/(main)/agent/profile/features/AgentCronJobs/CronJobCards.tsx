@@ -15,8 +15,6 @@ const { Text } = Typography;
 
 interface CronJobCardsProps {
   agentId?: string;
-  cronJobs: AgentCronJob[];
-  loading?: boolean;
   onDelete: (jobId: string) => void;
   onEdit: (jobId: string) => void;
 }
@@ -47,9 +45,9 @@ const getStatusInfo = (job: AgentCronJob) => {
   return { status: 'success' as const, text: 'agentCronJobs.status.enabled' };
 };
 
-const CronJobCards = memo<CronJobCardsProps>(({ agentId, cronJobs, loading, onDelete, onEdit }) => {
+const CronJobCards = memo<CronJobCardsProps>(({ agentId, onDelete, onEdit }) => {
   const { t } = useTranslation('setting');
-  const { updateCronJob } = useAgentCronJobs(agentId);
+  const { cronJobs, loading, updateCronJob } = useAgentCronJobs(agentId);
 
   const handleToggleEnabled = async (job: AgentCronJob) => {
     await updateCronJob(job.id, { enabled: !job.enabled });
