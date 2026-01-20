@@ -828,7 +828,7 @@ export class AiAgentService {
       onComplete: async ({ finalState, reason }) => {
         try {
           // Dynamically import to avoid circular dependency
-          const { updateJobStatus } = await import('../services/triggerQueue');
+          const { updateJobStatus } = await import('../triggerQueue');
           const { agentTriggers } = await import('@/database/schemas');
           const { eq, sql } = await import('drizzle-orm');
           const { getServerDB } = await import('@/database/server');
