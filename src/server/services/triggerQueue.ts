@@ -89,7 +89,29 @@ export async function getNextPendingJob(): Promise<TriggerQueueJob | undefined> 
     FOR UPDATE SKIP LOCKED
   `);
 
-  return result.rows[0] as unknown as TriggerQueueJob | undefined;
+  const row = result.rows[0];
+  if (!row) return undefined;
+
+  // Map snake_case database columns to camelCase TypeScript properties
+  // Raw SQL returns columns in snake_case but TypeScript expects camelCase
+  return {
+    agentId: row.agent_id,
+    attempts: row.attempts,
+    completedAt: row.completed_at,
+    createdAt: row.created_at,
+    error: row.error,
+    id: row.id,
+    idempotencyKey: row.idempotency_key,
+    maxAttempts: row.max_attempts,
+    prompt: row.prompt,
+    scheduledAt: row.scheduled_at,
+    startedAt: row.started_at,
+    status: row.status,
+    topicId: row.topic_id,
+    triggerId: row.trigger_id,
+    triggerPayload: row.trigger_payload,
+    userId: row.user_id,
+  } as TriggerQueueJob;
 }
 
 /**
