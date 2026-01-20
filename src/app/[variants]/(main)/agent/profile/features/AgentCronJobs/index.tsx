@@ -60,6 +60,7 @@ const AgentCronJobs = memo(() => {
       </Title>
 
       <CronJobCards
+        agentId={agentId}
         cronJobs={cronJobs}
         loading={loading}
         onDelete={handleDelete}
