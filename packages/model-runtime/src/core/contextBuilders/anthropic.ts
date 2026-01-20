@@ -6,6 +6,76 @@ import { OpenAIChatMessage, UserMessageContentPart } from '../../types';
 import { parseDataUri } from '../../utils/uriParser';
 
 /**
+ * Check if a JSON object matches a tool's parameter schema
+ * Uses required fields and property names to determine match quality
+ *
+ * @param input - The JSON object to check
+ * @param schema - The tool's parameter schema (JSON Schema format)
+ * @returns Object with match score (0-1) and boolean matches flag
+ */
+const matchesToolSchema = (
+  input: any,
+  schema: { properties?: Record<string, any>; required?: string[]; type?: string },
+): { matches: boolean; score: number } => {
+  if (!schema.properties || typeof input !== 'object' || input === null) {
+    return { matches: false, score: 0 };
+  }
+
+  const requiredFields = schema.required || [];
+  const schemaProps = Object.keys(schema.properties);
+  const inputProps = Object.keys(input);
+
+  // 1. Check required fields (critical) - all must be present
+  const hasAllRequired = requiredFields.every((field) => field in input);
+  if (!hasAllRequired) {
+    return { matches: false, score: 0 };
+  }
+
+  // 2. Calculate match score
+  const matchingProps = inputProps.filter((prop) => schemaProps.includes(prop));
+  const extraProps = inputProps.filter((prop) => !schemaProps.includes(prop));
+
+  // Score calculation:
+  // - Base: percentage of schema properties present in input
+  // - Penalty: 0.1 per extra property not in schema
+  const baseScore = matchingProps.length / Math.max(schemaProps.length, 1);
+  const penalty = extraProps.length * 0.1;
+  const score = Math.max(0, baseScore - penalty);
+
+  // 3. Determine if it's a valid match
+  // Must have all required fields AND at least match some properties
+  const matches = hasAllRequired && matchingProps.length > 0;
+
+  return { matches, score };
+};
+
+/**
+ * Find which tool best matches the given input by checking parameter schemas
+ * Returns the tool with highest match score, or null if no match found
+ *
+ * @param input - The JSON object to match
+ * @param availableTools - Array of available tools with their schemas
+ * @returns Best matching tool and its score, or null
+ */
+const findMatchingTool = (
+  input: any,
+  availableTools: OpenAI.ChatCompletionTool[],
+): { score: number; tool: OpenAI.ChatCompletionTool } | null => {
+  let bestMatch: { score: number; tool: OpenAI.ChatCompletionTool } | null = null;
+
+  for (const tool of availableTools) {
+    const schema = tool.function.parameters as any;
+    const { matches, score } = matchesToolSchema(input, schema);
+
+    if (matches && (!bestMatch || score > bestMatch.score)) {
+      bestMatch = { score, tool };
+    }
+  }
+
+  return bestMatch;
+};
+
+/**
  * Extracts all valid JSON objects from a string that may contain multiple concatenated
  * JSON objects. Returns array of parsed objects.
  * This handles cases where Anthropic's model generates malformed tool arguments.
@@ -153,6 +223,7 @@ const buildArrayContent = async (content: UserMessageContentPart[]) => {
 
 export const buildAnthropicMessage = async (
   message: OpenAIChatMessage,
+  availableTools?: OpenAI.ChatCompletionTool[],
 ): Promise<Anthropic.Messages.MessageParam | undefined> => {
   const content = message.content as string | UserMessageContentPart[];
 
@@ -211,12 +282,32 @@ export const buildAnthropicMessage = async (
               }
 
               // Create a tool_use block for each extracted JSON
-              return extractedJSONs.map((input, index) => ({
-                id: index === 0 ? tool.id : `${tool.id}_split_${index}`,
-                input,
-                name: tool.function.name,
-                type: 'tool_use',
-              }));
+              return extractedJSONs.map((input, index) => {
+                let toolName = tool.function.name;
+
+                // If we have multiple JSONs and available tools, try schema matching
+                if (extractedJSONs.length > 1 && availableTools && availableTools.length > 0) {
+                  const match = findMatchingTool(input, availableTools);
+                  if (match) {
+                    toolName = match.tool.function.name;
+                    console.log(
+                      `[Anthropic] Schema matching: Mapped JSON #${index + 1} to tool "${toolName}" (score: ${match.score.toFixed(2)}, original: "${tool.function.name}")`,
+                    );
+                  } else {
+                    console.warn(
+                      `[Anthropic] No schema match for JSON #${index + 1}, using original tool "${toolName}"`,
+                      { inputKeys: Object.keys(input) },
+                    );
+                  }
+                }
+
+                return {
+                  id: index === 0 ? tool.id : `${tool.id}_split_${index}`,
+                  input,
+                  name: toolName,
+                  type: 'tool_use',
+                };
+              });
             } catch (error) {
               console.error(
                 `[Anthropic] Failed to parse tool arguments for tool ${tool.function.name}:`,
@@ -263,7 +354,7 @@ export const buildAnthropicMessage = async (
 
 export const buildAnthropicMessages = async (
   oaiMessages: OpenAIChatMessage[],
-  options: { enabledContextCaching?: boolean } = {},
+  options: { enabledContextCaching?: boolean; tools?: OpenAI.ChatCompletionTool[] } = {},
 ): Promise<Anthropic.Messages.MessageParam[]> => {
   const messages: Anthropic.Messages.MessageParam[] = [];
   let pendingToolResults: Anthropic.ToolResultBlockParam[] = [];
@@ -309,7 +400,7 @@ export const buildAnthropicMessages = async (
         });
       }
     } else {
-      const anthropicMessage = await buildAnthropicMessage(message);
+      const anthropicMessage = await buildAnthropicMessage(message, options.tools);
       // Filter out undefined messages (e.g., empty assistant messages)
       if (anthropicMessage) {
         messages.push(anthropicMessage);

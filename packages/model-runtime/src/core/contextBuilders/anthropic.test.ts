@@ -795,6 +795,200 @@ describe('anthropicHelpers', () => {
     });
   });
 
+  describe('Schema matching for concatenated JSON', () => {
+    it('should match concatenated JSONs from different tools to correct tool names', async () => {
+      const tools: OpenAI.ChatCompletionTool[] = [
+        {
+          function: {
+            description: 'Call Ethereum RPC',
+            name: 'rpc_call',
+            parameters: {
+              properties: {
+                chain_id: { type: 'number' },
+                method: { type: 'string' },
+                params: { type: 'array' },
+              },
+              required: ['chain_id', 'method'],
+              type: 'object',
+            },
+          },
+          type: 'function',
+        },
+        {
+          function: {
+            description: 'Search the web',
+            name: 'search',
+            parameters: {
+              properties: {
+                query: { type: 'string' },
+                searchCategories: { type: 'array' },
+                searchEngines: { type: 'array' },
+                searchTimeRange: { type: 'string' },
+              },
+              required: ['query'],
+              type: 'object',
+            },
+          },
+          type: 'function',
+        },
+      ];
+
+      const message: OpenAIChatMessage = {
+        content: '',
+        role: 'assistant',
+        tool_calls: [
+          {
+            function: {
+              // Model incorrectly puts both tools' args in one call with wrong name
+              arguments:
+                '{"chain_id":1,"method":"eth_blockNumber","params":[]}{"query":"DeFi rates","searchCategories":["general"]}',
+              name: 'search', // Wrong! First JSON is for rpc_call
+            },
+            id: 'call_1',
+            type: 'function',
+          },
+        ],
+      };
+
+      const result = await buildAnthropicMessage(message, tools);
+
+      expect(result).toBeDefined();
+      expect(result?.role).toBe('assistant');
+      expect(result?.content).toHaveLength(2);
+
+      // First block should be matched to rpc_call (not search)
+      expect(result?.content[0]).toMatchObject({
+        id: 'call_1',
+        input: { chain_id: 1, method: 'eth_blockNumber', params: [] },
+        name: 'rpc_call', // ✅ Matched correctly!
+        type: 'tool_use',
+      });
+
+      // Second block should be matched to search
+      expect(result?.content[1]).toMatchObject({
+        id: 'call_1_split_1',
+        input: { query: 'DeFi rates', searchCategories: ['general'] },
+        name: 'search', // ✅ Correct!
+        type: 'tool_use',
+      });
+    });
+
+    it('should handle concatenated JSONs for same tool', async () => {
+      const tools: OpenAI.ChatCompletionTool[] = [
+        {
+          function: {
+            name: 'search',
+            parameters: {
+              properties: { query: { type: 'string' } },
+              required: ['query'],
+              type: 'object',
+            },
+          },
+          type: 'function',
+        },
+      ];
+
+      const message: OpenAIChatMessage = {
+        content: '',
+        role: 'assistant',
+        tool_calls: [
+          {
+            function: {
+              arguments: '{"query":"search1"}{"query":"search2"}',
+              name: 'search',
+            },
+            id: 'call_1',
+            type: 'function',
+          },
+        ],
+      };
+
+      const result = await buildAnthropicMessage(message, tools);
+
+      expect(result?.content).toHaveLength(2);
+      expect(result?.content[0]).toMatchObject({
+        name: 'search',
+        input: { query: 'search1' },
+      });
+      expect(result?.content[1]).toMatchObject({
+        name: 'search',
+        input: { query: 'search2' },
+      });
+    });
+
+    it('should fallback to original tool name if no schema match found', async () => {
+      const tools: OpenAI.ChatCompletionTool[] = [
+        {
+          function: {
+            name: 'search',
+            parameters: {
+              properties: { query: { type: 'string' } },
+              required: ['query'],
+              type: 'object',
+            },
+          },
+          type: 'function',
+        },
+      ];
+
+      const message: OpenAIChatMessage = {
+        content: '',
+        role: 'assistant',
+        tool_calls: [
+          {
+            function: {
+              // JSON doesn't match any tool schema
+              arguments: '{"unknown_field":"value"}{"query":"search"}',
+              name: 'search',
+            },
+            id: 'call_1',
+            type: 'function',
+          },
+        ],
+      };
+
+      const result = await buildAnthropicMessage(message, tools);
+
+      expect(result?.content).toHaveLength(2);
+      // First JSON doesn't match - uses original tool name
+      expect(result?.content[0]).toMatchObject({
+        name: 'search', // Fallback
+        input: { unknown_field: 'value' },
+      });
+      // Second JSON matches
+      expect(result?.content[1]).toMatchObject({
+        name: 'search',
+        input: { query: 'search' },
+      });
+    });
+
+    it('should work without tools parameter (backward compatibility)', async () => {
+      const message: OpenAIChatMessage = {
+        content: '',
+        role: 'assistant',
+        tool_calls: [
+          {
+            function: {
+              arguments: '{"query":"test"}',
+              name: 'search',
+            },
+            id: 'call_1',
+            type: 'function',
+          },
+        ],
+      };
+
+      // No tools provided
+      const result = await buildAnthropicMessage(message);
+
+      expect(result?.content).toHaveLength(1);
+      expect(result?.content[0]).toMatchObject({
+        name: 'search',
+        input: { query: 'test' },
+      });
+    });
+  });
+
   describe('buildAnthropicTools', () => {
     it('should correctly convert OpenAI tools to Anthropic format', () => {
       const tools: OpenAI.ChatCompletionTool[] = [

@@ -165,7 +165,10 @@ export class LobeAnthropicAI implements LobeRuntimeAI {
         ] as Anthropic.TextBlockParam[])
       : undefined;
 
-    const postMessages = await buildAnthropicMessages(user_messages, { enabledContextCaching });
+    const postMessages = await buildAnthropicMessages(user_messages, {
+      enabledContextCaching,
+      tools, // Pass tools for schema matching in concatenated JSON scenarios
+    });
 
     let postTools: anthropicTools[] | undefined = buildAnthropicTools(tools, {
       enabledContextCaching,
