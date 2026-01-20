@@ -50,6 +50,7 @@ export const agentTriggers = pgTable(
 
     // Execution statistics
     lastExecutedAt: timestamp('last_executed_at'),
+    nextScheduledAt: timestamp('next_scheduled_at'),
     totalExecutions: integer('total_executions').default(0),
 
     // Legacy fields (kept for backward compatibility with cron jobs)
@@ -69,6 +70,9 @@ export const agentTriggers = pgTable(
     index('agent_triggers_user_type_idx').on(t.userId, t.triggerType),
     index('agent_triggers_remaining_executions_idx').on(t.remainingExecutions),
     index('agent_triggers_last_executed_at_idx').on(t.lastExecutedAt),
+    index('agent_triggers_next_scheduled_at_idx')
+      .on(t.enabled, t.triggerType, t.nextScheduledAt)
+      .where(sql`${t.enabled} = true AND ${t.triggerType} = 'cron'`),
   ],
 );
 

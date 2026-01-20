@@ -1,3 +1,4 @@
+import { CronExpressionParser } from 'cron-parser';
 import { and, desc, eq, gt, isNull, or, sql } from 'drizzle-orm';
 
 import type {
@@ -8,6 +9,7 @@ import type {
 } from '../schemas/agentTrigger';
 import { agentTriggers } from '../schemas/agentTrigger';
 import type { LobeChatDatabase } from '../type';
+import type { CronTriggerConfig } from '@lobechat/types';
 
 export class AgentTriggerModel {
   private readonly userId: string;
@@ -18,14 +20,45 @@ export class AgentTriggerModel {
     this.userId = userId!;
   }
 
+  /**
+   * Calculate next scheduled execution time for cron trigger
+   * Always calculates from NOW (Linux cron behavior)
+   */
+  private static calculateNextScheduledAt(
+    triggerType: string,
+    triggerConfig: any,
+    enabled: boolean,
+  ): Date | null {
+    if (triggerType !== 'cron' || !enabled) return null;
+
+    try {
+      const config = triggerConfig as CronTriggerConfig;
+      const interval = CronExpressionParser.parse(config.cronPattern, {
+        currentDate: new Date(), // Always from NOW
+        tz: config.timezone || 'UTC',
+      });
+      return interval.next().toDate();
+    } catch (error) {
+      console.error('Failed to calculate nextScheduledAt:', error);
+      return null;
+    }
+  }
+
   // Create a new trigger
   async create(data: CreateAgentTriggerData): Promise<AgentTrigger> {
+    const nextScheduledAt = AgentTriggerModel.calculateNextScheduledAt(
+      data.triggerType,
+      data.triggerConfig,
+      data.enabled ?? true,
+    );
+
     const trigger = await this.db
       .insert(agentTriggers)
       .values({
         ...data,
         // Initialize remaining executions to match max executions
         remainingExecutions: data.maxExecutions,
+        nextScheduledAt,
         userId: this.userId,
       } as NewAgentTrigger)
       .returning();
@@ -119,12 +152,38 @@ export class AgentTriggerModel {
 
   // Update trigger
   async update(id: string, data: UpdateAgentTriggerData): Promise<AgentTrigger | null> {
+    const current = await this.findById(id);
+    if (!current) return null;
+
+    const updateSet: any = { ...data, updatedAt: new Date() };
+
+    // Recalculate nextScheduledAt when:
+    // - Enabling: data.enabled = true && !current.enabled
+    // - Changing pattern while enabled: data.triggerConfig && current.enabled
+    // - Disabling: data.enabled = false
+
+    if (data.enabled === true && !current.enabled) {
+      // Enabling
+      updateSet.nextScheduledAt = AgentTriggerModel.calculateNextScheduledAt(
+        data.triggerType ?? current.triggerType,
+        data.triggerConfig ?? current.triggerConfig,
+        true,
+      );
+    } else if (data.enabled === false) {
+      // Disabling
+      updateSet.nextScheduledAt = null;
+    } else if (data.triggerConfig && current.enabled) {
+      // Pattern change while enabled
+      updateSet.nextScheduledAt = AgentTriggerModel.calculateNextScheduledAt(
+        current.triggerType,
+        data.triggerConfig,
+        true,
+      );
+    }
+
     const result = await this.db
       .update(agentTriggers)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(updateSet)
       .where(and(eq(agentTriggers.id, id), eq(agentTriggers.userId, this.userId)))
       .returning();
 
@@ -184,12 +243,22 @@ export class AgentTriggerModel {
 
   // Reset execution counts and re-enable trigger
   async resetExecutions(id: string, newMaxExecutions?: number): Promise<AgentTrigger | null> {
+    const trigger = await this.findById(id);
+    if (!trigger) return null;
+
+    const nextScheduledAt = AgentTriggerModel.calculateNextScheduledAt(
+      trigger.triggerType,
+      trigger.triggerConfig,
+      true,
+    );
+
     const result = await this.db
       .update(agentTriggers)
       .set({
         enabled: true,
         maxExecutions: newMaxExecutions,
         remainingExecutions: newMaxExecutions,
+        nextScheduledAt,
         updatedAt: new Date(),
       })
       .where(and(eq(agentTriggers.id, id), eq(agentTriggers.userId, this.userId)))
@@ -216,16 +285,28 @@ export class AgentTriggerModel {
 
   // Batch update status (enable/disable multiple triggers)
   async batchUpdateStatus(ids: string[], enabled: boolean): Promise<number> {
-    const result = await this.db
-      .update(agentTriggers)
-      .set({
-        enabled,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(agentTriggers.userId, this.userId), sql`${agentTriggers.id} = ANY(${ids})`))
-      .returning();
+    if (enabled) {
+      // Enabling requires per-trigger calculation of nextScheduledAt
+      let updatedCount = 0;
+      for (const id of ids) {
+        await this.update(id, { enabled: true });
+        updatedCount++;
+      }
+      return updatedCount;
+    } else {
+      // Disabling: bulk update with nextScheduledAt = null
+      const result = await this.db
+        .update(agentTriggers)
+        .set({
+          enabled: false,
+          nextScheduledAt: null,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(agentTriggers.userId, this.userId), sql`${agentTriggers.id} = ANY(${ids})`))
+        .returning();
 
-    return result.length;
+      return result.length;
+    }
   }
 
   // Get trigger statistics (for dashboard)

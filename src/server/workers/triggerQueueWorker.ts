@@ -75,13 +75,15 @@ export class TriggerQueueWorker {
 
   /**
    * Checks for due cron triggers and enqueues them
+   * Uses nextScheduledAt for scheduling (not lastExecutedAt)
    */
   private async cronSchedulerLoop() {
     while (this.isRunning) {
       try {
         const db = await getServerDB();
+        const now = new Date();
 
-        // Get all enabled cron triggers
+        // Get enabled cron triggers that are due OR need initialization
         const cronTriggers = await db
           .select()
           .from(agentTriggers)
@@ -90,54 +92,91 @@ export class TriggerQueueWorker {
               eq(agentTriggers.enabled, true),
               eq(agentTriggers.triggerType, 'cron'),
               or(
+                // Due: nextScheduledAt in the past
+                sql`${agentTriggers.nextScheduledAt} <= ${now}`,
+                // Needs initialization: nextScheduledAt is NULL
+                isNull(agentTriggers.nextScheduledAt),
+              ),
+              // Has remaining executions
+              or(
                 gt(agentTriggers.remainingExecutions, 0),
                 isNull(agentTriggers.remainingExecutions),
               ),
             ),
           );
 
-        const now = new Date();
-
         // Check which triggers are due
         for (const trigger of cronTriggers) {
           try {
             const config = trigger.triggerConfig as CronTriggerConfig;
 
-            // Parse cron pattern
-            const interval = CronExpressionParser.parse(config.cronPattern, {
-              currentDate: trigger.lastExecutedAt || new Date(0),
-              tz: config.timezone || 'UTC',
-            });
+            // If nextScheduledAt is NULL, initialize it (for existing triggers)
+            if (!trigger.nextScheduledAt) {
+              const interval = CronExpressionParser.parse(config.cronPattern, {
+                currentDate: trigger.lastExecutedAt || new Date(0),
+                tz: config.timezone || 'UTC',
+              });
+              const nextRun = interval.next().toDate();
 
-            const nextRun = interval.next().toDate();
-
-            // Is it time to run?
-            if (nextRun <= now) {
-              // Check execution conditions
-              if (!this.checkExecutionConditions(trigger.executionConditions || undefined)) {
-                continue;
-              }
-
-              // Update lastExecutedAt BEFORE enqueueing to prevent duplicate triggers
-              // This ensures next cron check calculates from this timestamp
               await db
                 .update(agentTriggers)
-                .set({ lastExecutedAt: now })
+                .set({ nextScheduledAt: nextRun })
                 .where(eq(agentTriggers.id, trigger.id));
 
-              // Enqueue job with idempotency key (minute-level granularity)
-              const idempotencyKey = `cron_${trigger.id}_${Math.floor(now.getTime() / 60000)}`;
-              await enqueueTriggerJob({
-                agentId: trigger.agentId,
-                idempotencyKey,
-                payload: null,
-                prompt: trigger.content,
-                triggerId: trigger.id,
-                userId: trigger.userId,
-              });
-
-              console.log(`✅ Enqueued cron trigger ${trigger.id} (${trigger.name || 'Unnamed'})`);
+              console.log(
+                `🔧 Initialized nextScheduledAt for ${trigger.id}: ${nextRun.toISOString()}`,
+              );
+              continue; // Skip execution this round, execute next loop if due
             }
+
+            // Trigger is due (WHERE clause already verified nextScheduledAt <= now)
+            // Check execution conditions
+            if (!this.checkExecutionConditions(trigger.executionConditions || undefined)) {
+              // Conditions not met, calculate next run from NOW and skip
+              const interval = CronExpressionParser.parse(config.cronPattern, {
+                currentDate: now,
+                tz: config.timezone || 'UTC',
+              });
+              const nextScheduledAt = interval.next().toDate();
+
+              await db
+                .update(agentTriggers)
+                .set({ nextScheduledAt })
+                .where(eq(agentTriggers.id, trigger.id));
+
+              continue;
+            }
+
+            // Execute: Calculate NEXT nextScheduledAt from NOW
+            const interval = CronExpressionParser.parse(config.cronPattern, {
+              currentDate: now, // Linux cron: always from NOW
+              tz: config.timezone || 'UTC',
+            });
+            const nextScheduledAt = interval.next().toDate();
+
+            // Update BOTH fields atomically BEFORE enqueueing
+            await db
+              .update(agentTriggers)
+              .set({
+                nextScheduledAt,
+                lastExecutedAt: now,
+              })
+              .where(eq(agentTriggers.id, trigger.id));
+
+            // Enqueue job
+            const idempotencyKey = `cron_${trigger.id}_${Math.floor(now.getTime() / 60000)}`;
+            await enqueueTriggerJob({
+              agentId: trigger.agentId,
+              idempotencyKey,
+              payload: null,
+              prompt: trigger.content,
+              triggerId: trigger.id,
+              userId: trigger.userId,
+            });
+
+            console.log(
+              `✅ Enqueued cron trigger ${trigger.id} (${trigger.name || 'Unnamed'}), next run: ${nextScheduledAt.toISOString()}`,
+            );
           } catch (error) {
             console.error(`Error checking cron trigger ${trigger.id}:`, error);
           }
