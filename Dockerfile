@@ -134,6 +134,7 @@ COPY --from=builder /app/apps/desktop/dist/next /app/apps/desktop/dist/next
 
 # Copy database migrations
 COPY --from=builder /app/packages/database/migrations /app/migrations
+COPY --from=builder /app/scripts/migrateServerDB/fork-migrations /app/fork-migrations
 COPY --from=builder /app/scripts/migrateServerDB/docker.cjs /app/docker.cjs
 COPY --from=builder /app/scripts/migrateServerDB/docker-debug.cjs /app/docker-debug.cjs
 COPY --from=builder /app/scripts/migrateServerDB/errorHint.js /app/errorHint.js

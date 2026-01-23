@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 import { migrate as neonMigrate } from 'drizzle-orm/neon-serverless/migrator';
 import { migrate as nodeMigrate } from 'drizzle-orm/node-postgres/migrator';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // @ts-ignore tsgo handle esm import cjs and compatibility issues
@@ -21,6 +22,38 @@ const migrationsFolder = join(__dirname, '../../packages/database/migrations');
 
 const isDesktop = process.env.NEXT_PUBLIC_IS_DESKTOP_APP === '1';
 
+const runForkMigrations = async () => {
+  const forkMigrationsDir = join(__dirname, 'fork-migrations');
+
+  // Check if fork-migrations directory exists
+  if (!existsSync(forkMigrationsDir)) {
+    console.log('ℹ️  No fork-specific migrations found, skipping');
+    return;
+  }
+
+  console.log('[Fork Migrations] Running fork-specific migrations...');
+
+  const { serverDB } = await import('../../packages/database/src/server');
+
+  // Get all .sql files and sort them
+  const files = readdirSync(forkMigrationsDir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
+
+  for (const file of files) {
+    try {
+      const sql = readFileSync(join(forkMigrationsDir, file), 'utf8');
+      await serverDB.execute(sql);
+      console.log(`✅ Fork migration: ${file}`);
+    } catch (err) {
+      console.error(`❌ Fork migration failed: ${file}`, err);
+      throw err;
+    }
+  }
+
+  console.log('✅ Fork migrations complete.');
+};
+
 const runMigrations = async () => {
   const { serverDB } = await import('../../packages/database/src/server');
 
@@ -32,6 +65,10 @@ const runMigrations = async () => {
   }
 
   console.log('✅ database migration pass. use: %s ms', Date.now() - time);
+
+  // Run fork-specific migrations after main migrations
+  await runForkMigrations();
+
   // eslint-disable-next-line unicorn/no-process-exit
   process.exit(0);
 };
