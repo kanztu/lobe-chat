@@ -4,7 +4,7 @@ import { Upload } from 'antd';
 import { css, cx } from 'antd-style';
 import isEqual from 'fast-deep-equal';
 import { ArrowRight, FileUp, FolderUp, ImageUp, LibraryBig, Paperclip } from 'lucide-react';
-import { Suspense, memo, useState } from 'react';
+import { Suspense, memo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { message } from '@/components/AntdStaticMethods';
@@ -52,6 +52,9 @@ const FileUpload = memo(() => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
 
+  // Custom input ref for camera capture
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const files = useAgentStore((s) => agentByIdSelectors.getAgentFilesById(agentId)(s), isEqual);
   const knowledgeBases = useAgentStore(
     (s) => agentByIdSelectors.getAgentKnowledgeBasesById(agentId)(s),
@@ -70,20 +73,14 @@ const FileUpload = memo(() => {
       icon: ImageUp,
       key: 'upload-image',
       label: canUploadImage ? (
-        <Upload
-          accept={'image/*'}
-          beforeUpload={async (file) => {
-            setDropdownOpen(false);
-            await upload([file]);
-
-            return false;
+        <div
+          className={cx(hotArea)}
+          onClick={() => {
+            cameraInputRef.current?.click();
           }}
-          capture="environment"
-          multiple
-          showUploadList={false}
         >
-          <div className={cx(hotArea)}>{t('upload.action.imageUpload')}</div>
-        </Upload>
+          {t('upload.action.imageUpload')}
+        </div>
       ) : (
         <Tooltip placement={'right'} title={t('upload.action.imageDisabled')}>
           <div className={cx(hotArea)}>{t('upload.action.imageUpload')}</div>
@@ -263,6 +260,24 @@ const FileUpload = memo(() => {
         content
       )}
       <AttachKnowledgeModal open={modalOpen} setOpen={setModalOpen} />
+      {/* Hidden input for camera capture on mobile */}
+      <input
+        ref={cameraInputRef}
+        accept="image/*"
+        capture="environment"
+        multiple
+        onChange={async (e) => {
+          const files = e.target.files;
+          if (files && files.length > 0) {
+            setDropdownOpen(false);
+            await upload(Array.from(files));
+            // Reset input value to allow selecting the same file again
+            e.target.value = '';
+          }
+        }}
+        style={{ display: 'none' }}
+        type="file"
+      />
     </Suspense>
   );
 });
