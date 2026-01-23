@@ -78,6 +78,7 @@ const FileUpload = memo(() => {
 
             return false;
           }}
+          capture="environment"
           multiple
           showUploadList={false}
         >
