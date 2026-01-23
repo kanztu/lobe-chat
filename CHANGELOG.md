@@ -2,6 +2,1093 @@
 
 # Changelog
 
+## [Version 2.0.0-next.355](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.354...v2.0.0-next.355)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### 🐛 Bug Fixes
+
+- **home**: Use correct CreateGroupModal for session group creation.
+- **misc**: Fix favorite refresh bug and group topic refresh issue.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **home**: Use correct CreateGroupModal for session group creation, closes [#11752](https://github.com/lobehub/lobe-chat/issues/11752) ([36bcc50](https://github.com/lobehub/lobe-chat/commit/36bcc50))
+- **misc**: Fix favorite refresh bug and group topic refresh issue, closes [#11745](https://github.com/lobehub/lobe-chat/issues/11745) ([5d115ef](https://github.com/lobehub/lobe-chat/commit/5d115ef))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.354](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.353...v2.0.0-next.354)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### ♻ Code Refactoring
+
+- **misc**: Migrate AI Rules to Claude Code Skills.
+
+#### 🐛 Bug Fixes
+
+- **pdf**: Ensure worker config before Document render.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Code refactoring
+
+- **misc**: Migrate AI Rules to Claude Code Skills, closes [#11737](https://github.com/lobehub/lobe-chat/issues/11737) ([346fc46](https://github.com/lobehub/lobe-chat/commit/346fc46))
+
+#### What's fixed
+
+- **pdf**: Ensure worker config before Document render, closes [#11746](https://github.com/lobehub/lobe-chat/issues/11746) ([ad34072](https://github.com/lobehub/lobe-chat/commit/ad34072))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.353](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.352...v2.0.0-next.353)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### ✨ Features
+
+- **database**: Extended async task with metadata and parent id, added index.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **database**: Extended async task with metadata and parent id, added index, closes [#11712](https://github.com/lobehub/lobe-chat/issues/11712) ([31d2f26](https://github.com/lobehub/lobe-chat/commit/31d2f26))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.352](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.351...v2.0.0-next.352)
+
+<sup>Released on **2026-01-23**</sup>
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.351](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.350...v2.0.0-next.351)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Fix auto scroll.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Fix auto scroll, closes [#11734](https://github.com/lobehub/lobe-chat/issues/11734) ([892fa9f](https://github.com/lobehub/lobe-chat/commit/892fa9f))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.350](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.349...v2.0.0-next.350)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### 🐛 Bug Fixes
+
+- **ModelSelect**: Resolve tooltip hover causing popup to close.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **ModelSelect**: Resolve tooltip hover causing popup to close, closes [#11742](https://github.com/lobehub/lobe-chat/issues/11742) ([1b73f14](https://github.com/lobehub/lobe-chat/commit/1b73f14))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.349](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.348...v2.0.0-next.349)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: When use market group, the group sys role was not used.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: When use market group, the group sys role was not used, closes [#11739](https://github.com/lobehub/lobe-chat/issues/11739) ([afc76f9](https://github.com/lobehub/lobe-chat/commit/afc76f9))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.348](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.347...v2.0.0-next.348)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### 🐛 Bug Fixes
+
+- **copilot**: History popover not refreshing when agentId changes.
+- **misc**: Fixed the agent group builder tools excaution edge case crash, fixed the group topic copy not right.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **copilot**: History popover not refreshing when agentId changes, closes [#11731](https://github.com/lobehub/lobe-chat/issues/11731) ([64f39e7](https://github.com/lobehub/lobe-chat/commit/64f39e7))
+- **misc**: Fixed the agent group builder tools excaution edge case crash, closes [#11735](https://github.com/lobehub/lobe-chat/issues/11735) ([5de4742](https://github.com/lobehub/lobe-chat/commit/5de4742))
+- **misc**: Fixed the group topic copy not right, closes [#11730](https://github.com/lobehub/lobe-chat/issues/11730) ([282c1fb](https://github.com/lobehub/lobe-chat/commit/282c1fb))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.347](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.346...v2.0.0-next.347)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Add advace config back in agent/group profiles.
+
+#### 💄 Styles
+
+- **misc**: Move plugin store button outside scroll container.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Add advace config back in agent/group profiles, closes [#11727](https://github.com/lobehub/lobe-chat/issues/11727) ([403175f](https://github.com/lobehub/lobe-chat/commit/403175f))
+
+#### Styles
+
+- **misc**: Move plugin store button outside scroll container, closes [#11728](https://github.com/lobehub/lobe-chat/issues/11728) ([c484d1a](https://github.com/lobehub/lobe-chat/commit/c484d1a))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.346](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.345...v2.0.0-next.346)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### 🐛 Bug Fixes
+
+- **pdf**: Upgrade pdfjs-dist and react-pdf to v5.x.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **pdf**: Upgrade pdfjs-dist and react-pdf to v5.x, closes [#11686](https://github.com/lobehub/lobe-chat/issues/11686) ([2b620df](https://github.com/lobehub/lobe-chat/commit/2b620df))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.345](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.344...v2.0.0-next.345)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### ✨ Features
+
+- **misc**: Remove Clerk authentication code.
+
+#### 🐛 Bug Fixes
+
+- **misc**: Slove the agents header switch agents the lobeAI not show problem.
+
+#### 💄 Styles
+
+- **misc**: Improve auto scroll and group profile.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **misc**: Remove Clerk authentication code, closes [#11711](https://github.com/lobehub/lobe-chat/issues/11711) ([395595a](https://github.com/lobehub/lobe-chat/commit/395595a))
+
+#### What's fixed
+
+- **misc**: Slove the agents header switch agents the lobeAI not show problem, closes [#11726](https://github.com/lobehub/lobe-chat/issues/11726) ([f45f508](https://github.com/lobehub/lobe-chat/commit/f45f508))
+
+#### Styles
+
+- **misc**: Improve auto scroll and group profile, closes [#11725](https://github.com/lobehub/lobe-chat/issues/11725) ([550acc2](https://github.com/lobehub/lobe-chat/commit/550acc2))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.344](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.343...v2.0.0-next.344)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Fixed the sandbox tools call when error should use right callback.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Fixed the sandbox tools call when error should use right callback, closes [#11721](https://github.com/lobehub/lobe-chat/issues/11721) ([e8fce68](https://github.com/lobehub/lobe-chat/commit/e8fce68))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.343](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.342...v2.0.0-next.343)
+
+<sup>Released on **2026-01-23**</sup>
+
+#### ♻ Code Refactoring
+
+- **misc**: Improve memory data with experience and identity.
+
+#### 🐛 Bug Fixes
+
+- **misc**: Fix scope issue.
+
+#### 💄 Styles
+
+- **misc**: Update share style.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Code refactoring
+
+- **misc**: Improve memory data with experience and identity, closes [#11717](https://github.com/lobehub/lobe-chat/issues/11717) ([bdb3eb4](https://github.com/lobehub/lobe-chat/commit/bdb3eb4))
+
+#### What's fixed
+
+- **misc**: Fix scope issue, closes [#11719](https://github.com/lobehub/lobe-chat/issues/11719) ([17adde8](https://github.com/lobehub/lobe-chat/commit/17adde8))
+
+#### Styles
+
+- **misc**: Update share style, closes [#11716](https://github.com/lobehub/lobe-chat/issues/11716) ([3c70dfa](https://github.com/lobehub/lobe-chat/commit/3c70dfa))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.342](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.341...v2.0.0-next.342)
+
+<sup>Released on **2026-01-22**</sup>
+
+#### ♻ Code Refactoring
+
+- **userMemories**: Removed un-used code.
+
+#### 🐛 Bug Fixes
+
+- **copilot**: Pass correct scope when creating new session in PageEditor.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Code refactoring
+
+- **userMemories**: Removed un-used code, closes [#11713](https://github.com/lobehub/lobe-chat/issues/11713) ([89750fc](https://github.com/lobehub/lobe-chat/commit/89750fc))
+
+#### What's fixed
+
+- **copilot**: Pass correct scope when creating new session in PageEditor, closes [#11714](https://github.com/lobehub/lobe-chat/issues/11714) ([0259270](https://github.com/lobehub/lobe-chat/commit/0259270))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.341](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.340...v2.0.0-next.341)
+
+<sup>Released on **2026-01-22**</sup>
+
+#### ✨ Features
+
+- **misc**: Add server version check for desktop app.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **misc**: Add server version check for desktop app, closes [#11710](https://github.com/lobehub/lobe-chat/issues/11710) ([0cf2723](https://github.com/lobehub/lobe-chat/commit/0cf2723))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.340](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.339...v2.0.0-next.340)
+
+<sup>Released on **2026-01-22**</sup>
+
+#### 💄 Styles
+
+- **misc**: Update og.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Styles
+
+- **misc**: Update og, closes [#11709](https://github.com/lobehub/lobe-chat/issues/11709) ([01cf4e4](https://github.com/lobehub/lobe-chat/commit/01cf4e4))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.339](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.338...v2.0.0-next.339)
+
+<sup>Released on **2026-01-22**</sup>
+
+#### ♻ Code Refactoring
+
+- **misc**: Move vercel-react-best-practices skills to .agents directory.
+
+#### ✨ Features
+
+- **misc**: Skill setting page and skill store.
+
+#### 🐛 Bug Fixes
+
+- **model-runtime**: Filter unsupported image types (SVG) before sending to vision models.
+- **misc**: Fix group broadcast trigger tool use, fix local system tools.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Code refactoring
+
+- **misc**: Move vercel-react-best-practices skills to .agents directory, closes [#11703](https://github.com/lobehub/lobe-chat/issues/11703) ([6df7731](https://github.com/lobehub/lobe-chat/commit/6df7731))
+
+#### What's improved
+
+- **misc**: Skill setting page and skill store, closes [#11665](https://github.com/lobehub/lobe-chat/issues/11665) ([d8c0c26](https://github.com/lobehub/lobe-chat/commit/d8c0c26))
+
+#### What's fixed
+
+- **model-runtime**: Filter unsupported image types (SVG) before sending to vision models, closes [#11698](https://github.com/lobehub/lobe-chat/issues/11698) ([c0c99a7](https://github.com/lobehub/lobe-chat/commit/c0c99a7))
+- **misc**: Fix group broadcast trigger tool use, closes [#11646](https://github.com/lobehub/lobe-chat/issues/11646) ([831a9b3](https://github.com/lobehub/lobe-chat/commit/831a9b3))
+- **misc**: Fix local system tools, closes [#11702](https://github.com/lobehub/lobe-chat/issues/11702) ([6548fc7](https://github.com/lobehub/lobe-chat/commit/6548fc7))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.338](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.337...v2.0.0-next.338)
+
+<sup>Released on **2026-01-22**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Updata cron job ui & fixed commnuity pagenation goto error.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Updata cron job ui & fixed commnuity pagenation goto error, closes [#11700](https://github.com/lobehub/lobe-chat/issues/11700) ([42ad2a0](https://github.com/lobehub/lobe-chat/commit/42ad2a0))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.337](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.336...v2.0.0-next.337)
+
+<sup>Released on **2026-01-22**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Fix memory schema, update the agentbuilder tools not always use humanIntervention.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Fix memory schema, closes [#11645](https://github.com/lobehub/lobe-chat/issues/11645) ([3baf780](https://github.com/lobehub/lobe-chat/commit/3baf780))
+- **misc**: Update the agentbuilder tools not always use humanIntervention, closes [#11696](https://github.com/lobehub/lobe-chat/issues/11696) ([0d3017b](https://github.com/lobehub/lobe-chat/commit/0d3017b))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.336](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.335...v2.0.0-next.336)
+
+<sup>Released on **2026-01-22**</sup>
+
+#### ✨ Features
+
+- **misc**: Support agent group unpublish agents.
+
+#### 🐛 Bug Fixes
+
+- **misc**: Fix tool argument scape and improve multi task run.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **misc**: Support agent group unpublish agents, closes [#11687](https://github.com/lobehub/lobe-chat/issues/11687) ([4e060be](https://github.com/lobehub/lobe-chat/commit/4e060be))
+
+#### What's fixed
+
+- **misc**: Fix tool argument scape and improve multi task run, closes [#11691](https://github.com/lobehub/lobe-chat/issues/11691) ([b13bb8a](https://github.com/lobehub/lobe-chat/commit/b13bb8a))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.335](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.334...v2.0.0-next.335)
+
+<sup>Released on **2026-01-22**</sup>
+
+#### ✨ Features
+
+- **database**: Added user memory activity.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **database**: Added user memory activity, closes [#11680](https://github.com/lobehub/lobe-chat/issues/11680) ([0160fbd](https://github.com/lobehub/lobe-chat/commit/0160fbd))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.334](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.333...v2.0.0-next.334)
+
+<sup>Released on **2026-01-21**</sup>
+
+#### ✨ Features
+
+- **misc**: Add platform-aware download client menu option.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **misc**: Add platform-aware download client menu option, closes [#11676](https://github.com/lobehub/lobe-chat/issues/11676) ([55abddc](https://github.com/lobehub/lobe-chat/commit/55abddc))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.333](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.332...v2.0.0-next.333)
+
+<sup>Released on **2026-01-21**</sup>
+
+#### ✨ Features
+
+- **desktop**: Add legacy local database detection and migration guidance.
+- **misc**: Update the sandbox preinstall libs in sys role.
+
+#### 🐛 Bug Fixes
+
+- **misc**: Fix multi tasks no summary issue.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **desktop**: Add legacy local database detection and migration guidance, closes [#11682](https://github.com/lobehub/lobe-chat/issues/11682) ([5664b84](https://github.com/lobehub/lobe-chat/commit/5664b84))
+- **misc**: Update the sandbox preinstall libs in sys role, closes [#11688](https://github.com/lobehub/lobe-chat/issues/11688) ([404c577](https://github.com/lobehub/lobe-chat/commit/404c577))
+
+#### What's fixed
+
+- **misc**: Fix multi tasks no summary issue, closes [#11685](https://github.com/lobehub/lobe-chat/issues/11685) ([26ce317](https://github.com/lobehub/lobe-chat/commit/26ce317))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.332](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.331...v2.0.0-next.332)
+
+<sup>Released on **2026-01-21**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Improve e2e server and complete i18n resources.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Improve e2e server and complete i18n resources, closes [#11678](https://github.com/lobehub/lobe-chat/issues/11678) ([d450dd9](https://github.com/lobehub/lobe-chat/commit/d450dd9))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.331](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.330...v2.0.0-next.331)
+
+<sup>Released on **2026-01-21**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Slove the agent group editor not focus in editdata area.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Slove the agent group editor not focus in editdata area, closes [#11677](https://github.com/lobehub/lobe-chat/issues/11677) ([9ac84e6](https://github.com/lobehub/lobe-chat/commit/9ac84e6))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.330](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.329...v2.0.0-next.330)
+
+<sup>Released on **2026-01-21**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Fix multi agent tasks issue.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Fix multi agent tasks issue, closes [#11672](https://github.com/lobehub/lobe-chat/issues/11672) ([9de773b](https://github.com/lobehub/lobe-chat/commit/9de773b))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.329](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.328...v2.0.0-next.329)
+
+<sup>Released on **2026-01-21**</sup>
+
+#### ♻ Code Refactoring
+
+- **auth**: Remove NEXT_PUBLIC_AUTH_URL env variable.
+
+#### 🐛 Bug Fixes
+
+- **misc**: Sloved the old removeSessionTopics not work.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Code refactoring
+
+- **auth**: Remove NEXT_PUBLIC_AUTH_URL env variable, closes [#11658](https://github.com/lobehub/lobe-chat/issues/11658) ([c0f9875](https://github.com/lobehub/lobe-chat/commit/c0f9875))
+
+#### What's fixed
+
+- **misc**: Sloved the old removeSessionTopics not work, closes [#11671](https://github.com/lobehub/lobe-chat/issues/11671) ([06d41e5](https://github.com/lobehub/lobe-chat/commit/06d41e5))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.328](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.327...v2.0.0-next.328)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### ✨ Features
+
+- **misc**: Support client tasks mode.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **misc**: Support client tasks mode, closes [#11666](https://github.com/lobehub/lobe-chat/issues/11666) ([98cf57b](https://github.com/lobehub/lobe-chat/commit/98cf57b))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.327](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.326...v2.0.0-next.327)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### ♻ Code Refactoring
+
+- **model-select**: Migrate FunctionCallingModelSelect to LobeSelect.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Code refactoring
+
+- **model-select**: Migrate FunctionCallingModelSelect to LobeSelect, closes [#11664](https://github.com/lobehub/lobe-chat/issues/11664) ([ad51305](https://github.com/lobehub/lobe-chat/commit/ad51305))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.326](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.325...v2.0.0-next.326)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### 🐛 Bug Fixes
+
+- **desktop**: Gracefully handle missing update manifest 404 errors.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **desktop**: Gracefully handle missing update manifest 404 errors, closes [#11625](https://github.com/lobehub/lobe-chat/issues/11625) ([13e95b9](https://github.com/lobehub/lobe-chat/commit/13e95b9))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.325](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.324...v2.0.0-next.325)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### ♻ Code Refactoring
+
+- **ModelSwitchPanel**: Migrate from Popover to DropdownMenu with virtual scrolling.
+
+#### 🐛 Bug Fixes
+
+- **sidebar-drawer**: Fix drawer positioning and title style.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Code refactoring
+
+- **ModelSwitchPanel**: Migrate from Popover to DropdownMenu with virtual scrolling, closes [#11663](https://github.com/lobehub/lobe-chat/issues/11663) ([c9d9dff](https://github.com/lobehub/lobe-chat/commit/c9d9dff))
+
+#### What's fixed
+
+- **sidebar-drawer**: Fix drawer positioning and title style, closes [#11655](https://github.com/lobehub/lobe-chat/issues/11655) ([cf5320e](https://github.com/lobehub/lobe-chat/commit/cf5320e))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.324](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.323...v2.0.0-next.324)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: TypewriterEffect not refreshing on language change.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: TypewriterEffect not refreshing on language change, closes [#11657](https://github.com/lobehub/lobe-chat/issues/11657) ([ba30f46](https://github.com/lobehub/lobe-chat/commit/ba30f46))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.323](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.322...v2.0.0-next.323)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### ♻ Code Refactoring
+
+- **misc**: Optimize lobehub models and default configuration.
+
+#### ✨ Features
+
+- **misc**: Add the agents and agents group fork feature.
+
+#### 🐛 Bug Fixes
+
+- **model-runtime**: Fix Qwen parallel tool calls arguments incorrectly merged.
+- **topic**: Correct topic item href route for agent and group pages.
+- **misc**: Fix Topic component causing stack overflow and freezing the app, simplify updater config logic, slove the nuqs error in commnuity agent group page.
+
+#### 💄 Styles
+
+- **misc**: Optimize profile settings skeleton screen.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### Code refactoring
+
+- **misc**: Optimize lobehub models and default configuration, closes [#11621](https://github.com/lobehub/lobe-chat/issues/11621) ([5074fbe](https://github.com/lobehub/lobe-chat/commit/5074fbe))
+
+#### What's improved
+
+- **misc**: Add the agents and agents group fork feature, closes [#11652](https://github.com/lobehub/lobe-chat/issues/11652) ([b1c3b83](https://github.com/lobehub/lobe-chat/commit/b1c3b83))
+
+#### What's fixed
+
+- **model-runtime**: Fix Qwen parallel tool calls arguments incorrectly merged, closes [#11649](https://github.com/lobehub/lobe-chat/issues/11649) ([ddbe661](https://github.com/lobehub/lobe-chat/commit/ddbe661))
+- **topic**: Correct topic item href route for agent and group pages, closes [#11607](https://github.com/lobehub/lobe-chat/issues/11607) ([2fffe8b](https://github.com/lobehub/lobe-chat/commit/2fffe8b))
+- **misc**: Fix Topic component causing stack overflow and freezing the app, closes [#11609](https://github.com/lobehub/lobe-chat/issues/11609) ([600cb85](https://github.com/lobehub/lobe-chat/commit/600cb85))
+- **misc**: Simplify updater config logic, closes [#11636](https://github.com/lobehub/lobe-chat/issues/11636) ([5c645f0](https://github.com/lobehub/lobe-chat/commit/5c645f0))
+- **misc**: Slove the nuqs error in commnuity agent group page, closes [#11651](https://github.com/lobehub/lobe-chat/issues/11651) ([1c29bca](https://github.com/lobehub/lobe-chat/commit/1c29bca))
+
+#### Styles
+
+- **misc**: Optimize profile settings skeleton screen, closes [#11656](https://github.com/lobehub/lobe-chat/issues/11656) ([e61ae85](https://github.com/lobehub/lobe-chat/commit/e61ae85))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.322](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.321...v2.0.0-next.322)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### 🐛 Bug Fixes
+
+- **memory-user-memory**: Should fallback to server configured provider & model.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **memory-user-memory**: Should fallback to server configured provider & model, closes [#11643](https://github.com/lobehub/lobe-chat/issues/11643) ([af446d9](https://github.com/lobehub/lobe-chat/commit/af446d9))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.321](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.320...v2.0.0-next.321)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### ✨ Features
+
+- **memory-user-memory**: Support to configure preferred model.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's improved
+
+- **memory-user-memory**: Support to configure preferred model, closes [#11637](https://github.com/lobehub/lobe-chat/issues/11637) ([49374da](https://github.com/lobehub/lobe-chat/commit/49374da))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.320](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.319...v2.0.0-next.320)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### 🐛 Bug Fixes
+
+- **ShareModal**: Wrap ShareMessageModal with Provider in context menu.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **ShareModal**: Wrap ShareMessageModal with Provider in context menu, closes [#11434](https://github.com/lobehub/lobe-chat/issues/11434) [#11382](https://github.com/lobehub/lobe-chat/issues/11382) ([0d30e5f](https://github.com/lobehub/lobe-chat/commit/0d30e5f))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.319](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.318...v2.0.0-next.319)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Slove commnuity user avatarUrl is wrong, should update others in profile.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Slove commnuity user avatarUrl is wrong, should update others in profile, closes [#11634](https://github.com/lobehub/lobe-chat/issues/11634) ([04465c8](https://github.com/lobehub/lobe-chat/commit/04465c8))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
+## [Version 2.0.0-next.318](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.317...v2.0.0-next.318)
+
+<sup>Released on **2026-01-20**</sup>
+
+#### 🐛 Bug Fixes
+
+- **misc**: Fix parallel tools calling race issue.
+
+<br/>
+
+<details>
+<summary><kbd>Improvements and Fixes</kbd></summary>
+
+#### What's fixed
+
+- **misc**: Fix parallel tools calling race issue, closes [#11626](https://github.com/lobehub/lobe-chat/issues/11626) ([34bdcd4](https://github.com/lobehub/lobe-chat/commit/34bdcd4))
+
+</details>
+
+<div align="right">
+
+[![](https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square)](#readme-top)
+
+</div>
+
 ## [Version 2.0.0-next.317](https://github.com/lobehub/lobe-chat/compare/v2.0.0-next.316...v2.0.0-next.317)
 
 <sup>Released on **2026-01-19**</sup>

@@ -1,5 +1,263 @@
 [
   {
+    "children": {
+      "fixes": ["Fix favorite refresh bug and group topic refresh issue."]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.355"
+  },
+  {
+    "children": {
+      "improvements": ["Migrate AI Rules to Claude Code Skills."]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.354"
+  },
+  {
+    "children": {},
+    "date": "2026-01-23",
+    "version": "2.0.0-next.353"
+  },
+  {
+    "children": {},
+    "date": "2026-01-23",
+    "version": "2.0.0-next.352"
+  },
+  {
+    "children": {
+      "fixes": ["Fix auto scroll."]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.351"
+  },
+  {
+    "children": {},
+    "date": "2026-01-23",
+    "version": "2.0.0-next.350"
+  },
+  {
+    "children": {
+      "fixes": ["When use market group, the group sys role was not used."]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.349"
+  },
+  {
+    "children": {
+      "fixes": [
+        "Fixed the agent group builder tools excaution edge case crash, fixed the group topic copy not right."
+      ]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.348"
+  },
+  {
+    "children": {
+      "fixes": ["Add advace config back in agent/group profiles."],
+      "improvements": ["Move plugin store button outside scroll container."]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.347"
+  },
+  {
+    "children": {},
+    "date": "2026-01-23",
+    "version": "2.0.0-next.346"
+  },
+  {
+    "children": {
+      "features": ["Remove Clerk authentication code."],
+      "fixes": ["Slove the agents header switch agents the lobeAI not show problem."],
+      "improvements": ["Improve auto scroll and group profile."]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.345"
+  },
+  {
+    "children": {
+      "fixes": ["Fixed the sandbox tools call when error should use right callback."]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.344"
+  },
+  {
+    "children": {
+      "improvements": ["Update share style."],
+      "fixes": ["Fix scope issue."]
+    },
+    "date": "2026-01-23",
+    "version": "2.0.0-next.343"
+  },
+  {
+    "children": {},
+    "date": "2026-01-22",
+    "version": "2.0.0-next.342"
+  },
+  {
+    "children": {
+      "features": ["Add server version check for desktop app."]
+    },
+    "date": "2026-01-22",
+    "version": "2.0.0-next.341"
+  },
+  {
+    "children": {
+      "improvements": ["Update og."]
+    },
+    "date": "2026-01-22",
+    "version": "2.0.0-next.340"
+  },
+  {
+    "children": {
+      "improvements": ["Move vercel-react-best-practices skills to .agents directory."],
+      "features": ["Skill setting page and skill store."],
+      "fixes": ["Fix group broadcast trigger tool use, fix local system tools."]
+    },
+    "date": "2026-01-22",
+    "version": "2.0.0-next.339"
+  },
+  {
+    "children": {
+      "fixes": ["Updata cron job ui & fixed commnuity pagenation goto error."]
+    },
+    "date": "2026-01-22",
+    "version": "2.0.0-next.338"
+  },
+  {
+    "children": {
+      "fixes": [
+        "Fix memory schema, update the agentbuilder tools not always use humanIntervention."
+      ]
+    },
+    "date": "2026-01-22",
+    "version": "2.0.0-next.337"
+  },
+  {
+    "children": {
+      "features": ["Support agent group unpublish agents."],
+      "fixes": ["Fix tool argument scape and improve multi task run."]
+    },
+    "date": "2026-01-22",
+    "version": "2.0.0-next.336"
+  },
+  {
+    "children": {},
+    "date": "2026-01-22",
+    "version": "2.0.0-next.335"
+  },
+  {
+    "children": {
+      "features": ["Add platform-aware download client menu option."]
+    },
+    "date": "2026-01-21",
+    "version": "2.0.0-next.334"
+  },
+  {
+    "children": {
+      "features": ["Update the sandbox preinstall libs in sys role."],
+      "fixes": ["Fix multi tasks no summary issue."]
+    },
+    "date": "2026-01-21",
+    "version": "2.0.0-next.333"
+  },
+  {
+    "children": {
+      "fixes": ["Improve e2e server and complete i18n resources."]
+    },
+    "date": "2026-01-21",
+    "version": "2.0.0-next.332"
+  },
+  {
+    "children": {
+      "fixes": ["Slove the agent group editor not focus in editdata area."]
+    },
+    "date": "2026-01-21",
+    "version": "2.0.0-next.331"
+  },
+  {
+    "children": {
+      "fixes": ["Fix multi agent tasks issue."]
+    },
+    "date": "2026-01-21",
+    "version": "2.0.0-next.330"
+  },
+  {
+    "children": {
+      "fixes": ["Sloved the old removeSessionTopics not work."]
+    },
+    "date": "2026-01-21",
+    "version": "2.0.0-next.329"
+  },
+  {
+    "children": {
+      "features": ["Support client tasks mode."]
+    },
+    "date": "2026-01-20",
+    "version": "2.0.0-next.328"
+  },
+  {
+    "children": {},
+    "date": "2026-01-20",
+    "version": "2.0.0-next.327"
+  },
+  {
+    "children": {},
+    "date": "2026-01-20",
+    "version": "2.0.0-next.326"
+  },
+  {
+    "children": {},
+    "date": "2026-01-20",
+    "version": "2.0.0-next.325"
+  },
+  {
+    "children": {
+      "fixes": ["TypewriterEffect not refreshing on language change."]
+    },
+    "date": "2026-01-20",
+    "version": "2.0.0-next.324"
+  },
+  {
+    "children": {
+      "improvements": ["Optimize profile settings skeleton screen."],
+      "features": ["Add the agents and agents group fork feature."],
+      "fixes": [
+        "Fix Topic component causing stack overflow and freezing the app, simplify updater config logic, slove the nuqs error in commnuity agent group page."
+      ]
+    },
+    "date": "2026-01-20",
+    "version": "2.0.0-next.323"
+  },
+  {
+    "children": {},
+    "date": "2026-01-20",
+    "version": "2.0.0-next.322"
+  },
+  {
+    "children": {},
+    "date": "2026-01-20",
+    "version": "2.0.0-next.321"
+  },
+  {
+    "children": {},
+    "date": "2026-01-20",
+    "version": "2.0.0-next.320"
+  },
+  {
+    "children": {
+      "fixes": ["Slove commnuity user avatarUrl is wrong, should update others in profile."]
+    },
+    "date": "2026-01-20",
+    "version": "2.0.0-next.319"
+  },
+  {
+    "children": {
+      "fixes": ["Fix parallel tools calling race issue."]
+    },
+    "date": "2026-01-20",
+    "version": "2.0.0-next.318"
+  },
+  {
     "children": {},
     "date": "2026-01-19",
     "version": "2.0.0-next.317"

@@ -21,6 +21,7 @@ import { z } from 'zod';
 import {
   type IdentityEntryBasePayload,
   type IdentityEntryPayload,
+  UserMemoryExperienceModel,
   UserMemoryIdentityModel,
   UserMemoryModel,
 } from '@/database/models/userMemory';
@@ -203,6 +204,8 @@ const memoryProcedure = authedProcedure.use(serverDatabase).use(async (opts) => 
   const { ctx } = opts;
   return opts.next({
     ctx: {
+      experienceModel: new UserMemoryExperienceModel(ctx.serverDB, ctx.userId),
+      identityModel: new UserMemoryIdentityModel(ctx.serverDB, ctx.userId),
       memoryModel: new UserMemoryModel(ctx.serverDB, ctx.userId),
     },
   });
@@ -220,13 +223,66 @@ export const userMemoriesRouter = router({
       }
     }),
 
-  queryIdentitiesForInjection: authedProcedure
-    .use(serverDatabase)
+  queryExperiences: memoryProcedure
+    .input(
+      z
+        .object({
+          order: z.enum(['asc', 'desc']).optional(),
+          page: z.coerce.number().int().min(1).optional(),
+          pageSize: z.coerce.number().int().min(1).max(100).optional(),
+          q: z.string().optional(),
+          sort: z.enum(['capturedAt', 'scoreConfidence']).optional(),
+          tags: z.array(z.string()).optional(),
+          types: z.array(z.string()).optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const params = input ?? {};
+      const fallbackPage = params.page ?? 1;
+      const fallbackPageSize = params.pageSize ?? 20;
+
+      try {
+        return await ctx.experienceModel.queryList(params);
+      } catch (error) {
+        console.error('Failed to query experiences:', error);
+        return { items: [], page: fallbackPage, pageSize: fallbackPageSize, total: 0 };
+      }
+    }),
+
+  queryIdentities: memoryProcedure
+    .input(
+      z
+        .object({
+          order: z.enum(['asc', 'desc']).optional(),
+          page: z.coerce.number().int().min(1).optional(),
+          pageSize: z.coerce.number().int().min(1).max(100).optional(),
+          q: z.string().optional(),
+          relationships: z.array(z.string()).optional(),
+          sort: z.enum(['capturedAt', 'type']).optional(),
+          tags: z.array(z.string()).optional(),
+          types: z.array(z.string()).optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const params = input ?? {};
+      const fallbackPage = params.page ?? 1;
+      const fallbackPageSize = params.pageSize ?? 20;
+
+      try {
+        return await ctx.identityModel.queryList(params);
+      } catch (error) {
+        console.error('Failed to query identities:', error);
+        return { items: [], page: fallbackPage, pageSize: fallbackPageSize, total: 0 };
+      }
+    }),
+
+  queryIdentitiesForInjection: memoryProcedure
     .input(z.object({ limit: z.coerce.number().int().min(1).max(100).optional() }).optional())
     .query(async ({ ctx, input }) => {
       try {
-        const identityModel = new UserMemoryIdentityModel(ctx.serverDB, ctx.userId);
-        return await identityModel.queryForInjection(input?.limit ?? 50);
+        return await ctx.identityModel.queryForInjection(input?.limit ?? 50);
       } catch (error) {
         console.error('Failed to query identities for injection:', error);
         return [];
@@ -262,7 +318,7 @@ export const userMemoriesRouter = router({
           pageSize: z.coerce.number().int().min(1).max(100).optional(),
           q: z.string().optional(),
           sort: z
-            .enum(['scoreConfidence', 'scoreImpact', 'scorePriority', 'scoreUrgency'])
+            .enum(['capturedAt', 'scoreConfidence', 'scoreImpact', 'scorePriority', 'scoreUrgency'])
             .optional(),
           tags: z.array(z.string()).optional(),
           types: z.array(z.string()).optional(),
@@ -742,44 +798,43 @@ export const userMemoriesRouter = router({
 
   // REVIEW: Need to implement tool memory api
   toolAddContextMemory: memoryProcedure
-    .input(ContextMemoryItemSchema.omit({ memoryLayer: true }))
+    .input(ContextMemoryItemSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const inputWithLayer = { ...input, memoryLayer: LayersEnum.Context };
         const { agentRuntime, embeddingModel } = await getEmbeddingRuntime(
           ctx.serverDB,
           ctx.userId,
         );
         const embed = createEmbedder(agentRuntime, embeddingModel);
 
-        const summaryEmbedding = await embed(inputWithLayer.summary);
-        const detailsEmbedding = await embed(inputWithLayer.details);
-        const contextDescriptionEmbedding = await embed(inputWithLayer.withContext.description);
+        const summaryEmbedding = await embed(input.summary);
+        const detailsEmbedding = await embed(input.details);
+        const contextDescriptionEmbedding = await embed(input.withContext.description);
 
         const { context, memory } = await ctx.memoryModel.createContextMemory({
           context: {
             associatedObjects:
-              UserMemoryModel.parseAssociatedObjects(inputWithLayer.withContext.associatedObjects) ?? null,
+              UserMemoryModel.parseAssociatedObjects(input.withContext.associatedObjects) ?? null,
             associatedSubjects:
-              UserMemoryModel.parseAssociatedSubjects(inputWithLayer.withContext.associatedSubjects) ?? null,
-            currentStatus: inputWithLayer.withContext.currentStatus ?? null,
-            description: inputWithLayer.withContext.description ?? null,
+              UserMemoryModel.parseAssociatedSubjects(input.withContext.associatedSubjects) ?? null,
+            currentStatus: input.withContext.currentStatus ?? null,
+            description: input.withContext.description ?? null,
             descriptionVector: contextDescriptionEmbedding ?? null,
             metadata: {},
-            scoreImpact: inputWithLayer.withContext.scoreImpact ?? null,
-            scoreUrgency: inputWithLayer.withContext.scoreUrgency ?? null,
-            tags: inputWithLayer.tags ?? [],
-            title: inputWithLayer.withContext.title ?? null,
-            type: inputWithLayer.withContext.type ?? null,
+            scoreImpact: input.withContext.scoreImpact ?? null,
+            scoreUrgency: input.withContext.scoreUrgency ?? null,
+            tags: input.tags ?? [],
+            title: input.withContext.title ?? null,
+            type: input.withContext.type ?? null,
           },
-          details: inputWithLayer.details || '',
+          details: input.details || '',
           detailsEmbedding,
-          memoryCategory: inputWithLayer.memoryCategory,
-          memoryLayer: inputWithLayer.memoryLayer,
-          memoryType: inputWithLayer.memoryType,
-          summary: inputWithLayer.summary,
+          memoryCategory: input.memoryCategory,
+          memoryLayer: LayersEnum.Context,
+          memoryType: input.memoryType,
+          summary: input.summary,
           summaryEmbedding,
-          title: inputWithLayer.title,
+          title: input.title,
         });
 
         return {
@@ -798,45 +853,44 @@ export const userMemoriesRouter = router({
     }),
 
   toolAddExperienceMemory: memoryProcedure
-    .input(ExperienceMemoryItemSchema.omit({ memoryLayer: true }))
+    .input(ExperienceMemoryItemSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const inputWithLayer = { ...input, memoryLayer: LayersEnum.Experience };
         const { agentRuntime, embeddingModel } = await getEmbeddingRuntime(
           ctx.serverDB,
           ctx.userId,
         );
         const embed = createEmbedder(agentRuntime, embeddingModel);
 
-        const summaryEmbedding = await embed(inputWithLayer.summary);
-        const detailsEmbedding = await embed(inputWithLayer.details);
-        const situationVector = await embed(inputWithLayer.withExperience.situation);
-        const actionVector = await embed(inputWithLayer.withExperience.action);
-        const keyLearningVector = await embed(inputWithLayer.withExperience.keyLearning);
+        const summaryEmbedding = await embed(input.summary);
+        const detailsEmbedding = await embed(input.details);
+        const situationVector = await embed(input.withExperience.situation);
+        const actionVector = await embed(input.withExperience.action);
+        const keyLearningVector = await embed(input.withExperience.keyLearning);
 
         const { experience, memory } = await ctx.memoryModel.createExperienceMemory({
-          details: inputWithLayer.details || '',
+          details: input.details || '',
           detailsEmbedding,
           experience: {
-            action: inputWithLayer.withExperience.action ?? null,
+            action: input.withExperience.action ?? null,
             actionVector: actionVector ?? null,
-            keyLearning: inputWithLayer.withExperience.keyLearning ?? null,
+            keyLearning: input.withExperience.keyLearning ?? null,
             keyLearningVector: keyLearningVector ?? null,
             metadata: {},
-            possibleOutcome: inputWithLayer.withExperience.possibleOutcome ?? null,
-            reasoning: inputWithLayer.withExperience.reasoning ?? null,
-            scoreConfidence: inputWithLayer.withExperience.scoreConfidence ?? null,
-            situation: inputWithLayer.withExperience.situation ?? null,
+            possibleOutcome: input.withExperience.possibleOutcome ?? null,
+            reasoning: input.withExperience.reasoning ?? null,
+            scoreConfidence: input.withExperience.scoreConfidence ?? null,
+            situation: input.withExperience.situation ?? null,
             situationVector: situationVector ?? null,
-            tags: inputWithLayer.tags ?? [],
-            type: inputWithLayer.memoryType,
+            tags: input.tags ?? [],
+            type: input.memoryType,
           },
-          memoryCategory: inputWithLayer.memoryCategory,
-          memoryLayer: inputWithLayer.memoryLayer,
-          memoryType: inputWithLayer.memoryType,
-          summary: inputWithLayer.summary,
+          memoryCategory: input.memoryCategory,
+          memoryLayer: LayersEnum.Experience,
+          memoryType: input.memoryType,
+          summary: input.summary,
           summaryEmbedding,
-          title: inputWithLayer.title,
+          title: input.title,
         });
 
         return {
@@ -855,56 +909,55 @@ export const userMemoriesRouter = router({
     }),
 
   toolAddIdentityMemory: memoryProcedure
-    .input(AddIdentityActionSchema.omit({ memoryLayer: true }))
+    .input(AddIdentityActionSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const inputWithLayer = { ...input, memoryLayer: LayersEnum.Identity };
         const { agentRuntime, embeddingModel } = await getEmbeddingRuntime(
           ctx.serverDB,
           ctx.userId,
         );
         const embed = createEmbedder(agentRuntime, embeddingModel);
 
-        const summaryEmbedding = await embed(inputWithLayer.summary);
-        const detailsEmbedding = await embed(inputWithLayer.details);
-        const descriptionEmbedding = await embed(inputWithLayer.withIdentity.description);
+        const summaryEmbedding = await embed(input.summary);
+        const detailsEmbedding = await embed(input.details);
+        const descriptionEmbedding = await embed(input.withIdentity.description);
 
         const identityMetadata: Record<string, unknown> = {};
         if (
-          inputWithLayer.withIdentity.scoreConfidence !== null &&
-          inputWithLayer.withIdentity.scoreConfidence !== undefined
+          input.withIdentity.scoreConfidence !== null &&
+          input.withIdentity.scoreConfidence !== undefined
         ) {
-          identityMetadata.scoreConfidence = inputWithLayer.withIdentity.scoreConfidence;
+          identityMetadata.scoreConfidence = input.withIdentity.scoreConfidence;
         }
         if (
-          inputWithLayer.withIdentity.sourceEvidence !== null &&
-          inputWithLayer.withIdentity.sourceEvidence !== undefined
+          input.withIdentity.sourceEvidence !== null &&
+          input.withIdentity.sourceEvidence !== undefined
         ) {
-          identityMetadata.sourceEvidence = inputWithLayer.withIdentity.sourceEvidence;
+          identityMetadata.sourceEvidence = input.withIdentity.sourceEvidence;
         }
 
         const { identityId, userMemoryId } = await ctx.memoryModel.addIdentityEntry({
           base: {
-            details: inputWithLayer.details,
+            details: input.details,
             detailsVector1024: detailsEmbedding ?? null,
-            memoryCategory: inputWithLayer.memoryCategory,
-            memoryLayer: inputWithLayer.memoryLayer,
-            memoryType: inputWithLayer.memoryType,
+            memoryCategory: input.memoryCategory,
+            memoryLayer: LayersEnum.Identity,
+            memoryType: input.memoryType,
             metadata: Object.keys(identityMetadata).length > 0 ? identityMetadata : undefined,
-            summary: inputWithLayer.summary,
+            summary: input.summary,
             summaryVector1024: summaryEmbedding ?? null,
-            tags: inputWithLayer.tags,
-            title: inputWithLayer.title,
+            tags: input.tags,
+            title: input.title,
           },
           identity: {
-            description: inputWithLayer.withIdentity.description,
+            description: input.withIdentity.description,
             descriptionVector: descriptionEmbedding ?? null,
-            episodicDate: inputWithLayer.withIdentity.episodicDate,
+            episodicDate: input.withIdentity.episodicDate,
             metadata: Object.keys(identityMetadata).length > 0 ? identityMetadata : undefined,
-            relationship: inputWithLayer.withIdentity.relationship,
-            role: inputWithLayer.withIdentity.role,
-            tags: inputWithLayer.tags,
-            type: inputWithLayer.withIdentity.type,
+            relationship: input.withIdentity.relationship,
+            role: input.withIdentity.role,
+            tags: input.tags,
+            type: input.withIdentity.type,
           },
         });
 
@@ -924,49 +977,48 @@ export const userMemoriesRouter = router({
     }),
 
   toolAddPreferenceMemory: memoryProcedure
-    .input(PreferenceMemoryItemSchema.omit({ memoryLayer: true }))
+    .input(PreferenceMemoryItemSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        const inputWithLayer = { ...input, memoryLayer: LayersEnum.Preference };
         const { agentRuntime, embeddingModel } = await getEmbeddingRuntime(
           ctx.serverDB,
           ctx.userId,
         );
         const embed = createEmbedder(agentRuntime, embeddingModel);
 
-        const summaryEmbedding = await embed(inputWithLayer.summary);
-        const detailsEmbedding = await embed(inputWithLayer.details);
-        const conclusionVector = await embed(inputWithLayer.withPreference.conclusionDirectives);
+        const summaryEmbedding = await embed(input.summary);
+        const detailsEmbedding = await embed(input.details);
+        const conclusionVector = await embed(input.withPreference.conclusionDirectives);
 
         const suggestionsText =
-          inputWithLayer.withPreference?.suggestions?.length && inputWithLayer.withPreference?.suggestions?.length > 0
-            ? inputWithLayer.withPreference?.suggestions?.join('\n')
+          input.withPreference?.suggestions?.length && input.withPreference?.suggestions?.length > 0
+            ? input.withPreference?.suggestions?.join('\n')
             : null;
 
         const metadata = {
-          appContext: inputWithLayer.withPreference.appContext,
-          extractedScopes: inputWithLayer.withPreference.extractedScopes,
-          originContext: inputWithLayer.withPreference.originContext,
+          appContext: input.withPreference.appContext,
+          extractedScopes: input.withPreference.extractedScopes,
+          originContext: input.withPreference.originContext,
         } satisfies Record<string, unknown>;
 
         const { memory, preference } = await ctx.memoryModel.createPreferenceMemory({
-          details: inputWithLayer.details || '',
+          details: input.details || '',
           detailsEmbedding,
-          memoryCategory: inputWithLayer.memoryCategory,
-          memoryLayer: inputWithLayer.memoryLayer,
-          memoryType: inputWithLayer.memoryType,
+          memoryCategory: input.memoryCategory,
+          memoryLayer: LayersEnum.Preference,
+          memoryType: input.memoryType,
           preference: {
-            conclusionDirectives: inputWithLayer.withPreference.conclusionDirectives || '',
+            conclusionDirectives: input.withPreference.conclusionDirectives || '',
             conclusionDirectivesVector: conclusionVector ?? null,
             metadata,
-            scorePriority: inputWithLayer.withPreference.scorePriority ?? null,
+            scorePriority: input.withPreference.scorePriority ?? null,
             suggestions: suggestionsText,
-            tags: inputWithLayer.tags,
-            type: inputWithLayer.memoryType,
+            tags: input.tags,
+            type: input.memoryType,
           },
-          summary: inputWithLayer.summary,
+          summary: input.summary,
           summaryEmbedding,
-          title: inputWithLayer.title,
+          title: input.title,
         });
 
         return {

@@ -17,27 +17,38 @@ interface CustomNextConfig {
 export function defineConfig(config: CustomNextConfig) {
   const isProd = process.env.NODE_ENV === 'production';
   const buildWithDocker = process.env.DOCKER === 'true';
-  const isDesktop = process.env.NEXT_PUBLIC_IS_DESKTOP_APP === '1';
+
   const enableReactScan = !!process.env.REACT_SCAN_MONITOR_API_KEY;
   const shouldUseCSP = process.env.ENABLED_CSP === '1';
 
   const isTest =
     process.env.NODE_ENV === 'test' || process.env.TEST === '1' || process.env.E2E === '1';
 
-  // if you need to proxy the api endpoint to remote server
-
-  const isStandaloneMode = buildWithDocker || isDesktop;
+  const isStandaloneMode = buildWithDocker || process.env.NEXT_BUILD_STANDALONE === '1';
 
   const standaloneConfig: NextConfig = {
     output: 'standalone',
     outputFileTracingIncludes: { '*': ['public/**/*', '.next/static/**/*'] },
   };
 
+  // Vercel serverless optimization: exclude musl binaries
+  // Vercel uses Amazon Linux (glibc), not Alpine Linux (musl)
+  // This saves ~45MB (29MB canvas-musl + 16MB sharp-musl)
+  const vercelConfig: NextConfig = {
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/.pnpm/@napi-rs+canvas-*-musl*',
+        'node_modules/.pnpm/@img+sharp-libvips-*musl*',
+      ],
+    },
+  };
+
   const assetPrefix = process.env.NEXT_PUBLIC_ASSET_PREFIX;
 
   const nextConfig: NextConfig = {
-    ...(isStandaloneMode ? standaloneConfig : {}),
+    ...(isStandaloneMode ? standaloneConfig : vercelConfig),
     assetPrefix,
+
     compiler: {
       emotion: true,
     },
@@ -308,15 +319,27 @@ export function defineConfig(config: CustomNextConfig) {
         permanent: false,
         source: '/repos',
       },
+      {
+        destination: '/',
+        permanent: true,
+        source: '/chat',
+      },
+      // Redirect old Clerk login route to Better Auth signin
+      {
+        destination: '/signin',
+        permanent: true,
+        source: '/login',
+      },
       ...(config.redirects ?? []),
     ],
-
     // when external packages in dev mode with turbopack, this config will lead to bundle error
+    // @napi-rs/canvas is a native module that can't be bundled by Turbopack
+    // pdfjs-dist uses @napi-rs/canvas for DOMMatrix polyfill in Node.js environment
     serverExternalPackages: config.serverExternalPackages
       ? config.serverExternalPackages
-      : ['pdfkit'],
+      : ['pdfkit', '@napi-rs/canvas', 'pdfjs-dist'],
 
-    transpilePackages: ['pdfjs-dist', 'mermaid', 'better-auth-harmony'],
+    transpilePackages: ['mermaid', 'better-auth-harmony'],
     turbopack: {
       rules: isTest
         ? void 0
@@ -395,14 +418,13 @@ export function defineConfig(config: CustomNextConfig) {
 
   const withBundleAnalyzer = process.env.ANALYZE === 'true' ? analyzer() : noWrapper;
 
-  const withPWA =
-    isProd && !isDesktop
-      ? withSerwistInit({
-          register: false,
-          swDest: 'public/sw.js',
-          swSrc: 'src/app/sw.ts',
-        })
-      : noWrapper;
+  const withPWA = isProd
+    ? withSerwistInit({
+        register: false,
+        swDest: 'public/sw.js',
+        swSrc: 'src/app/sw.ts',
+      })
+    : noWrapper;
 
   return withBundleAnalyzer(withPWA(nextConfig as NextConfig));
 }

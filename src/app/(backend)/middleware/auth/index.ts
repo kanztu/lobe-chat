@@ -1,4 +1,3 @@
-import { type AuthObject } from '@clerk/backend';
 import {
   AgentRuntimeError,
   type ChatCompletionErrorPayload,
@@ -6,18 +5,11 @@ import {
 } from '@lobechat/model-runtime';
 import { ChatErrorType, type ClientSecretPayload } from '@lobechat/types';
 import { getXorPayload } from '@lobechat/utils/server';
-import { type NextRequest } from 'next/server';
 
+import { auth } from '@/auth';
 import { getServerDB } from '@/database/core/db-adaptor';
 import { type LobeChatDatabase } from '@/database/type';
-import {
-  LOBE_CHAT_AUTH_HEADER,
-  LOBE_CHAT_OIDC_AUTH_HEADER,
-  OAUTH_AUTHORIZED,
-  enableBetterAuth,
-  enableClerk,
-} from '@/envs/auth';
-import { ClerkAuth } from '@/libs/clerk-auth';
+import { LOBE_CHAT_AUTH_HEADER, LOBE_CHAT_OIDC_AUTH_HEADER, OAUTH_AUTHORIZED } from '@/envs/auth';
 import { validateOIDCJWT } from '@/libs/oidc-provider/jwt';
 import { createErrorResponse } from '@/utils/errorResponse';
 
@@ -62,30 +54,15 @@ export const checkAuth =
       // get Authorization from header
       const authorization = req.headers.get(LOBE_CHAT_AUTH_HEADER);
       const oauthAuthorized = !!req.headers.get(OAUTH_AUTHORIZED);
-      let betterAuthAuthorized = false;
 
       // better auth handler
-      if (enableBetterAuth) {
-        const { auth: betterAuth } = await import('@/auth');
+      const session = await auth.api.getSession({
+        headers: req.headers,
+      });
 
-        const session = await betterAuth.api.getSession({
-          headers: req.headers,
-        });
-
-        betterAuthAuthorized = !!session?.user?.id;
-      }
+      const betterAuthAuthorized = !!session?.user?.id;
 
       if (!authorization) throw AgentRuntimeError.createError(ChatErrorType.Unauthorized);
-
-      // check the Auth With payload and clerk auth
-      let clerkAuth = {} as AuthObject;
-
-      // TODO: V2 完整移除 client 模式下的 clerk 集成代码
-      if (enableClerk) {
-        const auth = new ClerkAuth();
-        const data = auth.getAuthFromRequest(req as NextRequest);
-        clerkAuth = data.clerkAuth;
-      }
 
       jwtPayload = getXorPayload(authorization);
 
@@ -106,7 +83,6 @@ export const checkAuth =
         checkAuthMethod({
           apiKey: jwtPayload.apiKey,
           betterAuthAuthorized,
-          clerkAuth,
           nextAuthAuthorized: oauthAuthorized,
         });
     } catch (e) {

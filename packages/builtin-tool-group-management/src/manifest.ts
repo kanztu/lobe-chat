@@ -84,105 +84,107 @@ export const GroupManagementManifest: BuiltinToolManifest = {
     // },
 
     // ==================== Task Execution ====================
-    {
-      description:
-        'Assign an asynchronous task to an agent. The task runs in the background and results are returned to the conversation context upon completion. Ideal for longer operations.',
-      name: GroupManagementApiName.executeAgentTask,
-      humanIntervention: 'required',
-      parameters: {
-        properties: {
-          agentId: {
-            description: 'The ID of the agent to execute the task.',
-            type: 'string',
-          },
-          title: {
-            description: 'Brief title describing what this task does (shown in UI).',
-            type: 'string',
-          },
-          task: {
-            description:
-              'Clear description of the task to perform. Be specific about expected deliverables.',
-            type: 'string',
-          },
-          timeout: {
-            default: 1_800_000,
-            description:
-              'Maximum time in milliseconds to wait for task completion (default: 1800000, 30 minutes).',
-            type: 'number',
-          },
-          skipCallSupervisor: {
-            default: false,
-            description:
-              'If true, the orchestration will end after the task completes, without calling the supervisor again. Use this when the task is the final action needed.',
-            type: 'boolean',
-          },
-        },
-        required: ['agentId', 'title', 'task'],
-        type: 'object',
-      },
-    },
-    {
-      description:
-        'Assign multiple tasks to different agents to run in parallel. Each agent works independently in their own context. Use this when you need multiple agents to work on different parts of a problem simultaneously.',
-      name: GroupManagementApiName.executeAgentTasks,
-      humanIntervention: 'required',
-      parameters: {
-        properties: {
-          tasks: {
-            description: 'Array of tasks, each assigned to a specific agent.',
-            items: {
-              properties: {
-                agentId: {
-                  description: 'The ID of the agent to execute this task.',
-                  type: 'string',
-                },
-                title: {
-                  description: 'Brief title describing what this task does (shown in UI).',
-                  type: 'string',
-                },
-                instruction: {
-                  description:
-                    'Detailed instruction/prompt for the task execution. Be specific about expected deliverables.',
-                  type: 'string',
-                },
-                timeout: {
-                  description:
-                    'Optional timeout in milliseconds for this task (default: 1800000, 30 minutes).',
-                  type: 'number',
-                },
-              },
-              required: ['agentId', 'title', 'instruction'],
-              type: 'object',
-            },
-            type: 'array',
-          },
-          skipCallSupervisor: {
-            default: false,
-            description:
-              'If true, the orchestration will end after all tasks complete, without calling the supervisor again.',
-            type: 'boolean',
-          },
-        },
-        required: ['tasks'],
-        type: 'object',
-      },
-    },
-    {
-      description:
-        'Interrupt a running agent task. Use this to stop a task that is taking too long or is no longer needed.',
-      humanIntervention: 'always',
-      name: GroupManagementApiName.interrupt,
-      parameters: {
-        properties: {
-          taskId: {
-            description: 'The ID of the task to interrupt (returned by executeTask).',
-            type: 'string',
-          },
-        },
-        required: ['taskId'],
-        type: 'object',
-      },
-    },
+    // TODO: Enable executeAgentTask when ready
+    // {
+    //   description:
+    //     'Assign an asynchronous task to an agent. The task runs in the background and results are returned to the conversation context upon completion. Ideal for longer operations.',
+    //   name: GroupManagementApiName.executeAgentTask,
+    //   humanIntervention: 'required',
+    //   parameters: {
+    //     properties: {
+    //       agentId: {
+    //         description: 'The ID of the agent to execute the task.',
+    //         type: 'string',
+    //       },
+    //       title: {
+    //         description: 'Brief title describing what this task does (shown in UI).',
+    //         type: 'string',
+    //       },
+    //       task: {
+    //         description:
+    //           'Clear description of the task to perform. Be specific about expected deliverables.',
+    //         type: 'string',
+    //       },
+    //       timeout: {
+    //         default: 1_800_000,
+    //         description:
+    //           'Maximum time in milliseconds to wait for task completion (default: 1800000, 30 minutes).',
+    //         type: 'number',
+    //       },
+    //       skipCallSupervisor: {
+    //         default: false,
+    //         description:
+    //           'If true, the orchestration will end after the task completes, without calling the supervisor again. Use this when the task is the final action needed.',
+    //         type: 'boolean',
+    //       },
+    //     },
+    //     required: ['agentId', 'title', 'task'],
+    //     type: 'object',
+    //   },
+    // },
+    // TODO: Enable executeAgentTasks when ready
+    // {
+    //   description:
+    //     'Assign multiple tasks to different agents to run in parallel. Each agent works independently in their own context. Use this when you need multiple agents to work on different parts of a problem simultaneously.',
+    //   name: GroupManagementApiName.executeAgentTasks,
+    //   humanIntervention: 'required',
+    //   parameters: {
+    //     properties: {
+    //       tasks: {
+    //         description: 'Array of tasks, each assigned to a specific agent.',
+    //         items: {
+    //           properties: {
+    //             agentId: {
+    //               description: 'The ID of the agent to execute this task.',
+    //               type: 'string',
+    //             },
+    //             title: {
+    //               description: 'Brief title describing what this task does (shown in UI).',
+    //               type: 'string',
+    //             },
+    //             instruction: {
+    //               description:
+    //                 'Detailed instruction/prompt for the task execution. Be specific about expected deliverables.',
+    //               type: 'string',
+    //             },
+    //             timeout: {
+    //               description:
+    //                 'Optional timeout in milliseconds for this task (default: 1800000, 30 minutes).',
+    //               type: 'number',
+    //             },
+    //           },
+    //           required: ['agentId', 'title', 'instruction'],
+    //           type: 'object',
+    //         },
+    //         type: 'array',
+    //       },
+    //       skipCallSupervisor: {
+    //         default: false,
+    //         description:
+    //           'If true, the orchestration will end after all tasks complete, without calling the supervisor again.',
+    //         type: 'boolean',
+    //       },
+    //     },
+    //     required: ['tasks'],
+    //     type: 'object',
+    //   },
+    // },
+    // {
+    //   description:
+    //     'Interrupt a running agent task. Use this to stop a task that is taking too long or is no longer needed.',
+    //   humanIntervention: 'always',
+    //   name: GroupManagementApiName.interrupt,
+    //   parameters: {
+    //     properties: {
+    //       taskId: {
+    //         description: 'The ID of the task to interrupt (returned by executeTask).',
+    //         type: 'string',
+    //       },
+    //     },
+    //     required: ['taskId'],
+    //     type: 'object',
+    //   },
+    // },
 
     // ==================== Context Management ====================
     // {

@@ -5,165 +5,17 @@ import OpenAI from 'openai';
 import { OpenAIChatMessage, UserMessageContentPart } from '../../types';
 import { parseDataUri } from '../../utils/uriParser';
 
-/**
- * Check if a JSON object matches a tool's parameter schema
- * Uses required fields and property names to determine match quality
- *
- * @param input - The JSON object to check
- * @param schema - The tool's parameter schema (JSON Schema format)
- * @returns Object with match score (0-1) and boolean matches flag
- */
-const matchesToolSchema = (
-  input: any,
-  schema: { properties?: Record<string, any>; required?: string[]; type?: string },
-): { matches: boolean; score: number } => {
-  if (!schema.properties || typeof input !== 'object' || input === null) {
-    return { matches: false, score: 0 };
-  }
+const ANTHROPIC_SUPPORTED_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+]);
 
-  const requiredFields = schema.required || [];
-  const schemaProps = Object.keys(schema.properties);
-  const inputProps = Object.keys(input);
-
-  // 1. Check required fields (critical) - all must be present
-  const hasAllRequired = requiredFields.every((field) => field in input);
-  if (!hasAllRequired) {
-    return { matches: false, score: 0 };
-  }
-
-  // 2. Calculate match score
-  const matchingProps = inputProps.filter((prop) => schemaProps.includes(prop));
-  const extraProps = inputProps.filter((prop) => !schemaProps.includes(prop));
-
-  // Score calculation:
-  // - Base: percentage of schema properties present in input
-  // - Penalty: 0.1 per extra property not in schema
-  const baseScore = matchingProps.length / Math.max(schemaProps.length, 1);
-  const penalty = extraProps.length * 0.1;
-  const score = Math.max(0, baseScore - penalty);
-
-  // 3. Determine if it's a valid match
-  // Must have all required fields AND at least match some properties
-  const matches = hasAllRequired && matchingProps.length > 0;
-
-  return { matches, score };
-};
-
-/**
- * Find which tool best matches the given input by checking parameter schemas
- * Returns the tool with highest match score, or null if no match found
- *
- * @param input - The JSON object to match
- * @param availableTools - Array of available tools with their schemas
- * @returns Best matching tool and its score, or null
- */
-const findMatchingTool = (
-  input: any,
-  availableTools: OpenAI.ChatCompletionTool[],
-): { score: number; tool: OpenAI.ChatCompletionTool } | null => {
-  let bestMatch: { score: number; tool: OpenAI.ChatCompletionTool } | null = null;
-
-  for (const tool of availableTools) {
-    const schema = tool.function.parameters as any;
-    const { matches, score } = matchesToolSchema(input, schema);
-
-    if (matches && (!bestMatch || score > bestMatch.score)) {
-      bestMatch = { score, tool };
-    }
-  }
-
-  return bestMatch;
-};
-
-/**
- * Extracts all valid JSON objects from a string that may contain multiple concatenated
- * JSON objects. Returns array of parsed objects.
- * This handles cases where Anthropic's model generates malformed tool arguments.
- */
-const extractAllValidJSONs = (jsonString: string): any[] => {
-  // First, try normal parse - if it works, return single-element array
-  try {
-    return [JSON.parse(jsonString)];
-  } catch (error) {
-    // If it fails with "non-whitespace character after JSON", extract all valid JSONs
-    if (error instanceof SyntaxError && error.message.includes('non-whitespace character after JSON')) {
-      const extractedJSONs: any[] = [];
-      let currentPos = 0;
-
-      while (currentPos < jsonString.length) {
-        // Skip whitespace
-        while (currentPos < jsonString.length && /\s/.test(jsonString[currentPos])) {
-          currentPos++;
-        }
-        if (currentPos >= jsonString.length) break;
-
-        // Try to parse JSON starting at currentPos
-        let depth = 0;
-        let inString = false;
-        let escape = false;
-        let startPos = currentPos;
-
-        for (let i = currentPos; i < jsonString.length; i++) {
-          const char = jsonString[i];
-
-          if (escape) {
-            escape = false;
-            continue;
-          }
-
-          if (char === '\\') {
-            escape = true;
-            continue;
-          }
-
-          if (char === '"' && !escape) {
-            inString = !inString;
-            continue;
-          }
-
-          if (!inString) {
-            if (char === '{' || char === '[') {
-              depth++;
-            } else if (char === '}' || char === ']') {
-              depth--;
-              if (depth === 0) {
-                // Found a complete JSON object
-                const jsonStr = jsonString.substring(startPos, i + 1);
-                try {
-                  extractedJSONs.push(JSON.parse(jsonStr));
-                  currentPos = i + 1;
-                  break;
-                } catch {
-                  // Invalid JSON, skip
-                  currentPos = i + 1;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        // If we didn't find a complete object, break
-        if (currentPos === startPos) break;
-      }
-
-      if (extractedJSONs.length > 1) {
-        console.warn(
-          `[Anthropic] MODEL BUG: Detected ${extractedJSONs.length} concatenated JSON objects in tool arguments!`,
-          {
-            toolArgumentsPreview: jsonString.substring(0, 150) + '...',
-            extractedObjects: extractedJSONs,
-            note: `Creating ${extractedJSONs.length} separate tool_use blocks. Some may fail schema validation but all will be attempted.`,
-          }
-        );
-      }
-
-      return extractedJSONs;
-    }
-
-    // If we couldn't extract any valid JSON, return empty array
-    return [];
-  }
+const isImageTypeSupported = (mimeType: string | null): boolean => {
+  if (!mimeType) return true;
+  return ANTHROPIC_SUPPORTED_IMAGE_TYPES.has(mimeType.toLowerCase());
 };
 
 export const buildAnthropicBlock = async (
@@ -184,7 +36,9 @@ export const buildAnthropicBlock = async (
     case 'image_url': {
       const { mimeType, base64, type } = parseDataUri(content.image_url.url);
 
-      if (type === 'base64')
+      if (type === 'base64') {
+        if (!isImageTypeSupported(mimeType)) return undefined;
+
         return {
           source: {
             data: base64 as string,
@@ -193,9 +47,13 @@ export const buildAnthropicBlock = async (
           },
           type: 'image',
         };
+      }
 
       if (type === 'url') {
         const { base64, mimeType } = await imageUrlToBase64(content.image_url.url);
+
+        if (!isImageTypeSupported(mimeType)) return undefined;
+
         return {
           source: {
             data: base64 as string,
@@ -223,7 +81,6 @@ const buildArrayContent = async (content: UserMessageContentPart[]) => {
 
 export const buildAnthropicMessage = async (
   message: OpenAIChatMessage,
-  availableTools?: OpenAI.ChatCompletionTool[],
 ): Promise<Anthropic.Messages.MessageParam | undefined> => {
   const content = message.content as string | UserMessageContentPart[];
 
@@ -264,69 +121,16 @@ export const buildAnthropicMessage = async (
 
         const messageContent = await buildArrayContent(rawContent);
 
-        const toolUseBlocks = message.tool_calls
-          .flatMap((tool) => {
-            try {
-              const extractedJSONs = extractAllValidJSONs(tool.function.arguments);
-
-              if (extractedJSONs.length === 0) {
-                // No valid JSON found
-                console.error(
-                  `[Anthropic] Failed to parse tool arguments for tool ${tool.function.name}:`,
-                  {
-                    arguments: tool.function.arguments,
-                    error: 'No valid JSON objects found',
-                  }
-                );
-                return [];
-              }
-
-              // Create a tool_use block for each extracted JSON
-              return extractedJSONs.map((input, index) => {
-                let toolName = tool.function.name;
-
-                // If we have multiple JSONs and available tools, try schema matching
-                if (extractedJSONs.length > 1 && availableTools && availableTools.length > 0) {
-                  const match = findMatchingTool(input, availableTools);
-                  if (match) {
-                    toolName = match.tool.function.name;
-                    console.log(
-                      `[Anthropic] Schema matching: Mapped JSON #${index + 1} to tool "${toolName}" (score: ${match.score.toFixed(2)}, original: "${tool.function.name}")`,
-                    );
-                  } else {
-                    console.warn(
-                      `[Anthropic] No schema match for JSON #${index + 1}, using original tool "${toolName}"`,
-                      { inputKeys: Object.keys(input) },
-                    );
-                  }
-                }
-
-                return {
-                  id: index === 0 ? tool.id : `${tool.id}_split_${index}`,
-                  input,
-                  name: toolName,
-                  type: 'tool_use',
-                };
-              });
-            } catch (error) {
-              console.error(
-                `[Anthropic] Failed to parse tool arguments for tool ${tool.function.name}:`,
-                {
-                  arguments: tool.function.arguments,
-                  error: error instanceof Error ? error.message : String(error),
-                },
-              );
-              // Skip this tool call if arguments are completely malformed
-              return [];
-            }
-          })
-          .filter(Boolean);
-
         return {
           content: [
             // avoid empty text content block
             ...messageContent,
-            ...(toolUseBlocks as any),
+            ...(message.tool_calls.map((tool) => ({
+              id: tool.id,
+              input: JSON.parse(tool.function.arguments),
+              name: tool.function.name,
+              type: 'tool_use',
+            })) as any),
           ].filter(Boolean),
           role: 'assistant',
         };
@@ -354,7 +158,7 @@ export const buildAnthropicMessage = async (
 
 export const buildAnthropicMessages = async (
   oaiMessages: OpenAIChatMessage[],
-  options: { enabledContextCaching?: boolean; tools?: OpenAI.ChatCompletionTool[] } = {},
+  options: { enabledContextCaching?: boolean } = {},
 ): Promise<Anthropic.Messages.MessageParam[]> => {
   const messages: Anthropic.Messages.MessageParam[] = [];
   let pendingToolResults: Anthropic.ToolResultBlockParam[] = [];
@@ -400,7 +204,7 @@ export const buildAnthropicMessages = async (
         });
       }
     } else {
-      const anthropicMessage = await buildAnthropicMessage(message, options.tools);
+      const anthropicMessage = await buildAnthropicMessage(message);
       // Filter out undefined messages (e.g., empty assistant messages)
       if (anthropicMessage) {
         messages.push(anthropicMessage);
