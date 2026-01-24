@@ -52,7 +52,7 @@ export const createMCPSlice: StateCreator<
   useMcpCategories: (params) => {
     const locale = globalHelpers.getCurrentLanguage();
     return useClientDataSWR(
-      ['mcp-categories', locale, ...Object.values(params)].join('-'),
+      ['mcp-categories', locale, ...Object.values(params || {})].filter(Boolean).join('-'),
       async () => discoverService.getMcpCategories(params),
       {
         revalidateOnFocus: false,
