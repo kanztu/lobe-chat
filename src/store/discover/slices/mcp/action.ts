@@ -27,7 +27,8 @@ export const createMCPSlice: StateCreator<
   [],
   MCPAction
 > = () => ({
-  useFetchMcpDetail: ({ identifier, version }) => {
+  useFetchMcpDetail: (params = {}) => {
+    const { identifier, version } = params;
     const locale = globalHelpers.getCurrentLanguage();
 
     return useClientDataSWR(
@@ -36,7 +37,7 @@ export const createMCPSlice: StateCreator<
     );
   },
 
-  useFetchMcpList: (params) => {
+  useFetchMcpList: (params = {}) => {
     const locale = globalHelpers.getCurrentLanguage();
     return useClientDataSWR(
       ['mcp-list', locale, ...Object.values(params)].filter(Boolean).join('-'),
@@ -49,10 +50,10 @@ export const createMCPSlice: StateCreator<
     );
   },
 
-  useMcpCategories: (params) => {
+  useMcpCategories: (params = {}) => {
     const locale = globalHelpers.getCurrentLanguage();
     return useClientDataSWR(
-      ['mcp-categories', locale, ...Object.values(params || {})].filter(Boolean).join('-'),
+      ['mcp-categories', locale, ...Object.values(params)].filter(Boolean).join('-'),
       async () => discoverService.getMcpCategories(params),
       {
         revalidateOnFocus: false,
