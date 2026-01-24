@@ -129,7 +129,8 @@ const MCPTypeSelect = ({ value, onChange }: MCPTypeSelectProps) => {
     <Flexbox gap={16} horizontal width={'100%'}>
       {data.map(({ label, description, features, value: itemValue, icon }) => {
         const isActive = value === itemValue;
-        const disabled = itemValue === 'stdio' && !isDesktop;
+        // Stdio enabled for single-user self-hosted deployments
+        const disabled = false; // itemValue === 'stdio' && !isDesktop;
         return (
           <Flexbox
             className={cx(styles.container, isActive && styles.active, disabled && styles.disabled)}

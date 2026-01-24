@@ -56,11 +56,11 @@ const QuickImportSection = ({
     // Extract identifier and mcpConfig from the successful parse result
     const { identifier, mcpConfig } = parseResult;
 
-    // Check for desktop requirement for stdio
-    if (!isDesktop && mcpConfig.type === 'stdio') {
-      setImportError(t('dev.mcp.stdioNotSupported'));
-      return;
-    }
+    // Stdio check removed for single-user self-hosted deployments
+    // if (!isDesktop && mcpConfig.type === 'stdio') {
+    //   setImportError(t('dev.mcp.stdioNotSupported'));
+    //   return;
+    // }
 
     // Check for duplicate identifier (only in create mode)
     if (!isEditMode && pluginIds.includes(identifier)) {

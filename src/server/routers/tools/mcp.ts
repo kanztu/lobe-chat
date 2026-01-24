@@ -35,12 +35,16 @@ const stdioParamsSchema = z.object({
 const mcpClientParamsSchema = z.union([httpParamsSchema, stdioParamsSchema]);
 
 const checkStdioEnvironment = (params: z.infer<typeof mcpClientParamsSchema>) => {
-  if (params.type === 'stdio' && !isDesktop) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Stdio MCP type is not supported in web environment.',
-    });
-  }
+  // Stdio MCP check disabled for single-user self-hosted deployments
+  // Security note: Only disable this if you are the sole user of your instance.
+  // In multi-user deployments, stdio allows arbitrary command execution on the server.
+
+  // if (params.type === 'stdio' && !isDesktop) {
+  //   throw new TRPCError({
+  //     code: 'BAD_REQUEST',
+  //     message: 'Stdio MCP type is not supported in web environment.',
+  //   });
+  // }
 };
 
 // Schema for metadata that frontend needs to pass (fields that backend cannot determine)
