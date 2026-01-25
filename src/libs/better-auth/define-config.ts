@@ -148,6 +148,8 @@ export function defineConfig(customOptions: CustomBetterAuthOptions) {
       errorURL: '/auth-error',
     },
     session: {
+      expiresIn: 60 * 60 * 24 * 30, // 30 days - sessions last this long
+      updateAge: 60 * 60 * 24, // 1 day - refresh session every day for active users
       cookieCache: {
         enabled: true,
         maxAge: 10 * 60, // Cache duration in seconds
