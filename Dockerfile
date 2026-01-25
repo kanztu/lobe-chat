@@ -48,7 +48,8 @@ ENV APP_URL="http://app.com" \
     AUTH_SECRET="use-for-build" \
     DATABASE_DRIVER="node" \
     DATABASE_URL="postgres://postgres:password@localhost:5432/postgres" \
-    KEY_VAULTS_SECRET="use-for-build"
+    KEY_VAULTS_SECRET="use-for-build" \
+    AUTH_SECRET="use-for-build"
 
 # Sentry
 ENV NEXT_PUBLIC_SENTRY_DSN="${NEXT_PUBLIC_SENTRY_DSN}" \

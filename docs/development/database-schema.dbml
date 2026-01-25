@@ -274,6 +274,7 @@ table chat_groups {
   description text
   avatar text
   background_color text
+  market_identifier text
   content text
   editor_data jsonb
   config jsonb
@@ -491,6 +492,7 @@ table message_groups {
   type text
   content text
   editor_data jsonb
+  metadata jsonb
   client_id varchar(255)
   accessed_at "timestamp with time zone" [not null, default: `now()`]
   created_at "timestamp with time zone" [not null, default: `now()`]

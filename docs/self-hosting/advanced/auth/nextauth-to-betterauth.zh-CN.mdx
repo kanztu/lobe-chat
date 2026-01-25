@@ -80,7 +80,7 @@ Better Auth 支持更多功能，以下是新增的环境变量：
 | ------------------------- | -------------------------------- |
 | `AUTH_ALLOWED_EMAILS`     | 邮箱白名单（限制注册）                      |
 | `AUTH_EMAIL_VERIFICATION` | 启用邮箱验证（设为 `1`）                   |
-| `ENABLE_MAGIC_LINK`       | 启用魔法链接登录（设为 `1`）                 |
+| `AUTH_ENABLE_MAGIC_LINK`  | 启用魔法链接登录（设为 `1`）                 |
 | `EMAIL_SERVICE_PROVIDER`  | 邮件服务提供商（`nodemailer` 或 `resend`） |
 
 ## 简单迁移
@@ -94,10 +94,10 @@ Better Auth 支持更多功能，以下是新增的环境变量：
 
   **示例场景**：假设你之前的账户绑定了两个 SSO 账户：
 
-  - 主邮箱（Google）：`mail1@google.com`
-  - 副邮箱（Microsoft）：`mail2@outlook.com`
+  - 主邮箱（Google）：`a@google.com`
+  - 副邮箱（Microsoft）：`b@outlook.com`
 
-  迁移后使用 `mail2@outlook.com` 登录将会**创建新用户**，而非关联到原有账户。
+  迁移后使用 `b@outlook.com` 登录将会**创建新用户**，而非关联到原有账户。
 </Callout>
 
 ### 步骤
@@ -291,6 +291,16 @@ npx tsx scripts/nextauth-to-betterauth/verify.ts
 
 ## 常见问题
 
+### 访问前清除浏览器数据
+
+迁移完成后，如果遇到登录问题，请先尝试清除浏览器的站点数据：
+
+1. 打开浏览器开发者工具（F12 或右键 → 检查）
+2. 进入 Application 标签页 → Storage → Clear site data
+3. 刷新页面后重试
+
+![清除浏览器站点数据](https://hub-apac-1.lobeobjects.space/docs/733c50ee2302e5daa3d99dc0739238c8.png)
+
 ### 迁移后用户无法登录
 
 - 检查 `AUTH_SECRET` 是否正确设置
@@ -312,9 +322,37 @@ npx tsx scripts/nextauth-to-betterauth/verify.ts
 
 这是因为数据库 schema 未更新。请先运行 `pnpm db:migrate` 更新数据库结构，然后再执行迁移脚本。
 
+### email\_not\_found 错误
+
+如果登录时跳转到 `signin?callbackUrl=...&error=email_not_found`，说明 LobeChat 无法获取用户邮箱。
+
+<Callout type={'warning'}>
+  **重要提示**：Better Auth 目前**强依赖用户邮箱**进行身份认证。所有 SSO 提供商必须配置为返回邮箱信息，否则用户无法登录。
+</Callout>
+
+常见原因：
+
+**原因 1：SSO 连接未请求邮箱权限**
+
+配置 SSO 连接时（如 Auth0 中的 GitHub 连接），务必在 **Attributes** 部分勾选 **Email Address** 权限。LobeChat 需要用户邮箱进行身份认证。
+
+**原因 2：用户在身份提供商中未配置邮箱**
+
+对于 Casdoor、Logto 等身份提供商，用户可能没有配置邮箱。
+
+解决方案：
+
+1. 先在 LobeChat 中配置身份提供商的 Webhook 以同步用户数据：
+   - [Casdoor Webhook 配置](/zh/docs/self-hosting/advanced/auth/providers/casdoor)
+   - [Logto Webhook 配置](/zh/docs/self-hosting/advanced/auth/providers/logto)
+2. 然后在身份提供商的管理后台为用户配置邮箱
+3. 用户数据通过 Webhook 同步到 LobeChat 后即可正常登录
+
 ## 相关阅读
 
 <Cards>
+  <Card href={'/zh/docs/self-hosting/advanced/auth/migration-internals'} title={'迁移技术原理'} />
+
   <Card href={'/zh/docs/self-hosting/advanced/auth'} title={'身份验证服务配置'} />
 
   <Card href={'/zh/docs/self-hosting/environment-variables/auth'} title={'认证相关环境变量'} />

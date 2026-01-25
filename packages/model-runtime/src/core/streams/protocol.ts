@@ -156,9 +156,19 @@ export function readableFromAsyncIterable<T>(iterable: AsyncIterable<T>) {
     },
 
     async pull(controller) {
-      const { done, value } = await it.next();
-      if (done) controller.close();
-      else controller.enqueue(value);
+      try {
+        const { done, value } = await it.next();
+        if (done) controller.close();
+        else controller.enqueue(value);
+      } catch (e) {
+        const error = e as Error;
+
+        controller.enqueue(
+          (ERROR_CHUNK_PREFIX +
+            JSON.stringify({ message: error.message, name: error.name, stack: error.stack })) as T,
+        );
+        controller.close();
+      }
     },
   });
 }
@@ -176,9 +186,19 @@ export const convertIterableToStream = <T>(stream: AsyncIterable<T>) => {
       await it.return?.(reason);
     },
     async pull(controller) {
-      const { done, value } = await it.next();
-      if (done) controller.close();
-      else controller.enqueue(value);
+      try {
+        const { done, value } = await it.next();
+        if (done) controller.close();
+        else controller.enqueue(value);
+      } catch (e) {
+        const error = e as Error;
+
+        controller.enqueue(
+          (ERROR_CHUNK_PREFIX +
+            JSON.stringify({ message: error.message, name: error.name, stack: error.stack })) as T,
+        );
+        controller.close();
+      }
     },
 
     async start(controller) {

@@ -51,6 +51,7 @@ const checkRequiredEnvVars = () => {
       console.error(`    📖 Documentation: ${docUrl}\n`);
     }
     console.error('Please configure these environment variables and redeploy.');
+    console.error('\n💡 TIP: If you previously used NEXT_AUTH_SECRET, simply rename it to AUTH_SECRET.');
     console.error('═'.repeat(70) + '\n');
     process.exit(1);
   }
@@ -88,7 +89,7 @@ const printEnvInfo = () => {
   console.log(`    VERCEL_BRANCH_URL: ${process.env.VERCEL_BRANCH_URL ?? '(not set)'}`);
   console.log(`    VERCEL_PROJECT_PRODUCTION_URL: ${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? '(not set)'}`);
   console.log(`    AUTH_EMAIL_VERIFICATION: ${process.env.AUTH_EMAIL_VERIFICATION ?? '(not set)'}`);
-  console.log(`    ENABLE_MAGIC_LINK: ${process.env.ENABLE_MAGIC_LINK ?? '(not set)'}`);
+  console.log(`    AUTH_ENABLE_MAGIC_LINK: ${process.env.AUTH_ENABLE_MAGIC_LINK ?? '(not set)'}`);
 
   // Check SSO providers configuration
   const ssoProviders = process.env.AUTH_SSO_PROVIDERS;

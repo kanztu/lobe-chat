@@ -555,6 +555,7 @@ export default {
   'skillStore.networkError': 'Network error, please try again',
   'skillStore.search': 'Search skills by name or keyword, press Enter to search…',
   'skillStore.tabs.community': 'Community',
+  'skillStore.tabs.custom': 'Custom',
   'skillStore.tabs.lobehub': 'LobeHub',
   'skillStore.title': 'Skill Store',
   'startConversation': 'Start Conversation',

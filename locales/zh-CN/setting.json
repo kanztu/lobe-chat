@@ -487,6 +487,7 @@
   "skillStore.networkError": "网络错误，请重试",
   "skillStore.search": "按名称或关键词搜索技能，按 Enter 搜索…",
   "skillStore.tabs.community": "社区",
+  "skillStore.tabs.custom": "自定义",
   "skillStore.tabs.lobehub": "LobeHub",
   "skillStore.title": "技能商店",
   "startConversation": "开始对话",
