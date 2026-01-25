@@ -31,6 +31,9 @@ import type { ChatStore } from '@/store/chat/store';
 import { messageMapKey } from '@/store/chat/utils/messageMapKey';
 import { sleep } from '@/utils/sleep';
 
+import { executeTaskPolling } from './helpers/executeTaskPolling';
+import { executeTasksPolling } from './helpers/executeTasksPolling';
+
 const log = debug('lobe-store:agent-executors');
 
 // Tool pricing configuration (USD per call)
@@ -592,42 +595,71 @@ export const createAgentExecutors = (context: {
 
           const stateType = result.state?.type;
 
-          // GTD async tasks need to be passed to Agent for exec_task/exec_tasks instruction
+          // GTD async tasks - auto-invoke polling logic instead of waiting for Agent decision
           // Includes both server-side (execTask/execTasks) and client-side (execClientTask/execClientTasks)
-          const execTaskStateTypes = ['execTask', 'execTasks', 'execClientTask', 'execClientTasks'];
-          if (execTaskStateTypes.includes(stateType)) {
-            log(
-              '[%s][call_tool] Detected %s state, passing to Agent for decision',
-              sessionLogId,
-              stateType,
-            );
+          if (stateType === 'execTask' || stateType === 'execClientTask') {
+            log('[%s][call_tool] Detected %s state, auto-invoking task polling', sessionLogId, stateType);
 
+            // Extract task from state
+            const taskState = result.state as { task: any; parentMessageId: string };
+
+            // Directly invoke task polling helper
+            const taskResult = await executeTaskPolling({
+              get: context.get,
+              messageKey: context.messageKey,
+              operationId: context.operationId,
+              parentMessageId: taskState.parentMessageId,
+              state: newState,
+              task: taskState.task,
+            });
+
+            // Return task_result phase with the final outcome
             return {
-              events,
-              newState,
+              events: [...events, ...taskResult.events],
+              newState: taskResult.newState,
               nextContext: {
-                payload: {
-                  data: result,
-                  executionTime,
-                  isSuccess,
-                  parentMessageId: toolMessageId,
-                  stop: true,
-                  toolCall: chatToolPayload,
-                  toolCallId: chatToolPayload.id,
-                } as GeneralAgentCallToolResultPayload,
-                phase: 'tool_result',
+                payload: taskResult.payload,
+                phase: 'task_result',
                 session: {
-                  eventCount: events.length,
-                  messageCount: newState.messages.length,
+                  eventCount: events.length + taskResult.events.length,
+                  messageCount: taskResult.newState.messages.length,
                   sessionId: state.operationId,
                   status: 'running',
                   stepCount: state.stepCount + 1,
                 },
-                stepUsage: {
-                  cost: toolCost,
-                  toolName,
-                  unitPrice: toolCost,
-                  usageCount: 1,
+              } as AgentRuntimeContext,
+            };
+          }
+
+          if (stateType === 'execTasks' || stateType === 'execClientTasks') {
+            log('[%s][call_tool] Detected %s state, auto-invoking tasks polling', sessionLogId, stateType);
+
+            // Extract tasks from state
+            const tasksState = result.state as { tasks: any[]; parentMessageId: string };
+
+            // Directly invoke tasks polling helper
+            const tasksResult = await executeTasksPolling({
+              get: context.get,
+              messageKey: context.messageKey,
+              operationId: context.operationId,
+              parentMessageId: tasksState.parentMessageId,
+              state: newState,
+              tasks: tasksState.tasks,
+            });
+
+            // Return tasks_batch_result phase with the final outcomes
+            return {
+              events: [...events, ...tasksResult.events],
+              newState: tasksResult.newState,
+              nextContext: {
+                payload: tasksResult.payload,
+                phase: 'tasks_batch_result',
+                session: {
+                  eventCount: events.length + tasksResult.events.length,
+                  messageCount: tasksResult.newState.messages.length,
+                  sessionId: state.operationId,
+                  status: 'running',
+                  stepCount: state.stepCount + 1,
                 },
               } as AgentRuntimeContext,
             };
