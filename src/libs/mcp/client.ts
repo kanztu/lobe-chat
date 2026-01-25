@@ -6,6 +6,17 @@ import {
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.d.ts';
 import type { Progress } from '@modelcontextprotocol/sdk/types.js';
+// Patch SDK protocol version to fix compatibility with servers that don't support 2025-11-25
+import * as mcpTypes from '@modelcontextprotocol/sdk/types.js';
+// Override the LATEST_PROTOCOL_VERSION to use a widely supported version
+// This fixes: "Unsupported protocol version (supported versions: 2025-06-18, 2025-03-26, 2024-11-05, 2024-10-07)"
+if (mcpTypes.LATEST_PROTOCOL_VERSION === '2025-11-25') {
+  Object.defineProperty(mcpTypes, 'LATEST_PROTOCOL_VERSION', {
+    value: '2025-06-18',
+    writable: false,
+    configurable: true,
+  });
+}
 import debug from 'debug';
 import { spawn } from 'node:child_process';
 
