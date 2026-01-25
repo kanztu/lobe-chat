@@ -6,19 +6,11 @@ import {
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.d.ts';
 import type { Progress } from '@modelcontextprotocol/sdk/types.js';
-// Patch SDK protocol version to fix compatibility with servers that don't support 2025-11-25
-import * as mcpTypes from '@modelcontextprotocol/sdk/types.js';
-// Override the LATEST_PROTOCOL_VERSION to use a widely supported version
-// This fixes: "Unsupported protocol version (supported versions: 2025-06-18, 2025-03-26, 2024-11-05, 2024-10-07)"
-if (mcpTypes.LATEST_PROTOCOL_VERSION === '2025-11-25') {
-  Object.defineProperty(mcpTypes, 'LATEST_PROTOCOL_VERSION', {
-    value: '2025-06-18',
-    writable: false,
-    configurable: true,
-  });
-}
 import debug from 'debug';
 import { spawn } from 'node:child_process';
+
+// Use 2025-06-18 instead of SDK's default (2025-11-25) for better compatibility
+const COMPATIBLE_PROTOCOL_VERSION = '2025-06-18';
 
 import {
   type MCPClientParams,
@@ -164,6 +156,30 @@ async function preCheckStdioCommand(params: {
   });
 }
 
+// Custom Client class that uses compatible protocol version
+class CompatibleClient extends Client {
+  async connect(transport: Transport, options?: { onprogress?: (progress: Progress) => void }) {
+    // Call parent's connect which will call our overridden request method
+    // Store original request to intercept initialize call
+    const originalRequest = this.request.bind(this);
+    
+    // Temporarily override request to patch protocol version for initialize
+    this.request = async (request: any, schema?: any, opts?: any) => {
+      if (request.method === 'initialize' && request.params?.protocolVersion) {
+        request.params.protocolVersion = COMPATIBLE_PROTOCOL_VERSION;
+      }
+      return originalRequest(request, schema, opts);
+    };
+
+    try {
+      await super.connect(transport, options);
+    } finally {
+      // Restore original request method
+      this.request = originalRequest;
+    }
+  }
+}
+
 export class MCPClient {
   private mcp: Client;
   private transport: Transport;
@@ -171,7 +187,7 @@ export class MCPClient {
 
   constructor(params: MCPClientParams) {
     this.params = params;
-    this.mcp = new Client({ name: 'lobehub-mcp-client', version: '1.0.0' });
+    this.mcp = new CompatibleClient({ name: 'lobehub-mcp-client', version: '1.0.0' });
 
     switch (params.type) {
       case 'http': {
