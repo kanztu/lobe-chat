@@ -1,10 +1,10 @@
 'use client';
 
 import { type KlavisServerType } from '@lobechat/const';
-import { ActionIcon, Avatar, DropdownMenu, Flexbox, Icon } from '@lobehub/ui';
+import { Avatar, DropdownMenu, Flexbox, Icon, Button as LobeButton } from '@lobehub/ui';
 import { App, Button } from 'antd';
 import { createStaticStyles, cssVar } from 'antd-style';
-import { Loader2, MoreVerticalIcon, SquareArrowOutUpRight, Unplug } from 'lucide-react';
+import { Loader2, MoreHorizontalIcon, SquareArrowOutUpRight, Unplug } from 'lucide-react';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -120,7 +120,7 @@ const KlavisSkillItem = memo<KlavisSkillItemProps>(({ serverType, server }) => {
         try {
           await refreshKlavisServerTools(serverName);
         } catch (error) {
-          console.error('[Klavis] Failed to check auth status:', error);
+          console.debug('[Klavis] Polling check (expected during auth):', error);
         }
       }, POLL_INTERVAL_MS);
 
@@ -145,8 +145,8 @@ const KlavisSkillItem = memo<KlavisSkillItemProps>(({ serverType, server }) => {
               windowCheckIntervalRef.current = null;
             }
             oauthWindowRef.current = null;
-            await refreshKlavisServerTools(serverName);
-            setIsWaitingAuth(false);
+            // Start polling after window closes
+            startFallbackPolling(serverName);
           }
         } catch {
           console.log('[Klavis] COOP blocked window.closed access, falling back to polling');
@@ -301,7 +301,7 @@ const KlavisSkillItem = memo<KlavisSkillItemProps>(({ serverType, server }) => {
           ]}
           placement="bottomRight"
         >
-          <ActionIcon icon={MoreVerticalIcon} />
+          <LobeButton icon={MoreHorizontalIcon} />
         </DropdownMenu>
       );
     }
@@ -313,35 +313,35 @@ const KlavisSkillItem = memo<KlavisSkillItemProps>(({ serverType, server }) => {
 
   return (
     <Flexbox
-        align="center"
-        className={styles.container}
-        gap={16}
-        horizontal
-        justify="space-between"
-      >
-        <Flexbox align="center" gap={16} horizontal style={{ flex: 1, overflow: 'hidden' }}>
-          <div className={styles.icon}>{renderIcon()}</div>
-          <Flexbox gap={4} style={{ overflow: 'hidden' }}>
-            <span
-              className={styles.title}
-              onClick={() =>
-                createIntegrationDetailModal({
-                  identifier: serverType.identifier,
-                  serverName: serverType.serverName,
-                  type: 'klavis',
-                })
-              }
-            >
-              {serverType.label}
-            </span>
-            {!isConnected && renderStatus()}
-          </Flexbox>
-        </Flexbox>
-        <Flexbox align="center" gap={12} horizontal>
-          {isConnected && renderStatus()}
-          {renderAction()}
+      align="center"
+      className={styles.container}
+      gap={16}
+      horizontal
+      justify="space-between"
+    >
+      <Flexbox align="center" gap={16} horizontal style={{ flex: 1, overflow: 'hidden' }}>
+        <div className={styles.icon}>{renderIcon()}</div>
+        <Flexbox gap={4} style={{ overflow: 'hidden' }}>
+          <span
+            className={styles.title}
+            onClick={() =>
+              createIntegrationDetailModal({
+                identifier: serverType.identifier,
+                serverName: serverType.serverName,
+                type: 'klavis',
+              })
+            }
+          >
+            {serverType.label}
+          </span>
+          {!isConnected && renderStatus()}
         </Flexbox>
       </Flexbox>
+      <Flexbox align="center" gap={12} horizontal>
+        {isConnected && renderStatus()}
+        {renderAction()}
+      </Flexbox>
+    </Flexbox>
   );
 });
 

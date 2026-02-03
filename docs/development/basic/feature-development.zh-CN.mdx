@@ -1,16 +1,22 @@
 ---
-title: LobeChat 功能开发完全指南
+title: LobeHub 功能开发完全指南
+description: 了解如何在 LobeHub 中开发完整的功能需求，提升开发效率。
+tags:
+  - LobeHub
+  - 功能开发
+  - 开发指南
+  - 开场设置
 ---
 
-# LobeChat 功能开发完全指南
+# LobeHub 功能开发完全指南
 
-本文档旨在指导开发者了解如何在 LobeChat 中开发一块完整的功能需求。
+本文档旨在指导开发者了解如何在 LobeHub 中开发一块完整的功能需求。
 
-我们将以 [RFC 021 - 自定义助手开场引导](https://github.com/lobehub/lobe-chat/discussions/891) 为例，阐述完整的实现流程。
+我们将以 [RFC 021 - 自定义助手开场引导](https://github.com/lobehub/lobehub/discussions/891) 为例，阐述完整的实现流程。
 
 ## 一、更新 schema
 
-lobe-chat 使用 postgres 数据库，浏览器端本地数据库使用 [pglite](https://pglite.dev/)（wasm 版本 postgres）。项目还使用了 [drizzle](https://orm.drizzle.team/) ORM 用来操作数据库。
+lobehub 使用 postgres 数据库，浏览器端本地数据库使用 [pglite](https://pglite.dev/)（wasm 版本 postgres）。项目还使用了 [drizzle](https://orm.drizzle.team/) ORM 用来操作数据库。
 
 相比旧方案浏览器端使用 indexDB 来说，浏览器端和 server 端都使用 postgres 好处在于 model 层代码可以完全复用。
 
@@ -153,7 +159,7 @@ export const sessionRouter = router({
 
 ### 数据流 store 实现
 
-lobe-chat 使用 [zustand](https://zustand.docs.pmnd.rs/getting-started/introduction) 作为全局状态管理框架，对于状态管理的详细实践介绍，可以查阅 [📘 状态管理最佳实践](/zh/docs/development/state-management/state-management-intro)。
+lobehub 使用 [zustand](https://zustand.docs.pmnd.rs/getting-started/introduction) 作为全局状态管理框架，对于状态管理的详细实践介绍，可以查阅 [📘 状态管理最佳实践](/zh/docs/development/state-management/state-management-intro)。
 
 和 agent 相关的 store 有两个：
 
@@ -247,7 +253,7 @@ export const agentSelectors = {
 - [@ant-design/icons](https://ant.design/components/icon-cn) 和 [lucide](https://lucide.dev/icons/): 图标库
 - [react-i18next](https://github.com/i18next/react-i18next) 和 [lobe-i18n](https://github.com/lobehub/lobe-cli-toolbox/tree/master/packages/lobe-i18n) ：i18n 框架和多语言自动翻译工具
 
-lobe-chat 是个国际化项目，新加的文案需要更新默认的 `locale` 文件： `src/locales/default/setting.ts` 。
+lobehub 是个国际化项目，新加的文案需要更新默认的 `locale` 文件： `src/locales/default/setting.ts` 。
 
 我们以子组件 `OpeningQuestion.tsx` 为例，组件实现：
 
@@ -366,7 +372,7 @@ const OpeningQuestions = memo(() => {
         {isRepeat && (
           <p className={styles.repeatError}>{t('settingOpening.openingQuestions.repeat')}</p>
         )}
-     
+
 </Flexbox>
 
       <div className={styles.questionsList}>
@@ -383,7 +389,7 @@ const OpeningQuestions = memo(() => {
                   onClick={() => removeQuestion(item.content)}
                   type="text"
                 />
-             
+
 </SortableList.Item>
             )}
           />
@@ -393,9 +399,9 @@ const OpeningQuestions = memo(() => {
             description={t('settingOpening.openingQuestions.empty')}
           />
         )}
-     
+
 </div>
-   
+
 </Flexbox>
   );
 });
@@ -448,7 +454,7 @@ const WelcomeMessage = () => {
       {chatItem}
       {/* 渲染引导性问题 */}
       <OpeningQuestions mobile={mobile} questions={openingQuestions} />
-   
+
 </Flexbox>
   ) : (
     chatItem
@@ -467,4 +473,4 @@ export default WelcomeMessage;
 
 ## 总结
 
-以上就是 LobeChat 开场设置功能的完整实现流程。开发者可以参考本文档进行相关功能的开发和测试。
+以上就是 LobeHub 开场设置功能的完整实现流程。开发者可以参考本文档进行相关功能的开发和测试。

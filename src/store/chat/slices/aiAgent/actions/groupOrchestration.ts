@@ -213,15 +213,24 @@ export const groupOrchestrationSlice: StateCreator<
    * Creates a supervisor_decided result with decision='execute_task' and starts orchestration
    */
   triggerExecuteTask: async (params) => {
-    const { supervisorAgentId, agentId, task, timeout, toolMessageId, skipCallSupervisor } = params;
-    log(
-      '[triggerExecuteTask] Starting orchestration with execute_task: supervisorAgentId=%s, agentId=%s, task=%s, timeout=%s, toolMessageId=%s, skipCallSupervisor=%s',
+    const {
       supervisorAgentId,
       agentId,
-      task,
+      instruction,
       timeout,
       toolMessageId,
       skipCallSupervisor,
+      runInClient,
+    } = params;
+    log(
+      '[triggerExecuteTask] Starting orchestration with execute_task: supervisorAgentId=%s, agentId=%s, instruction=%s, timeout=%s, toolMessageId=%s, skipCallSupervisor=%s, runInClient=%s',
+      supervisorAgentId,
+      agentId,
+      instruction,
+      timeout,
+      toolMessageId,
+      skipCallSupervisor,
+      runInClient,
     );
 
     const groupId = get().activeGroupId;
@@ -239,7 +248,7 @@ export const groupOrchestrationSlice: StateCreator<
         type: 'supervisor_decided',
         payload: {
           decision: 'execute_task',
-          params: { agentId, task, timeout, toolMessageId },
+          params: { agentId, instruction, runInClient, timeout, toolMessageId },
           skipCallSupervisor: skipCallSupervisor ?? false,
         },
       },
@@ -437,12 +446,15 @@ export const groupOrchestrationSlice: StateCreator<
         revalidateOnReconnect: false,
         refreshInterval: POLLING_INTERVAL,
         onSuccess: (data) => {
-          if (data?.taskDetail && messageId) {
-            // Update taskDetail
+          if (data && messageId) {
+            // Update taskDetail and tasks (intermediate messages)
             get().internal_dispatchMessage({
               id: messageId,
               type: 'updateMessage',
-              value: { taskDetail: data.taskDetail },
+              value: {
+                taskDetail: data.taskDetail,
+                tasks: data.messages,
+              },
             });
 
             // Update content when task is completed or failed

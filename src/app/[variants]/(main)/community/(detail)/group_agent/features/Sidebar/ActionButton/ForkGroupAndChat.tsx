@@ -104,9 +104,11 @@ const ForkGroupAndChat = memo<{ mobile?: boolean }>(() => {
         const rawConfig = {
           avatar: currentVersion.avatar,
           backgroundColor: currentVersion.backgroundColor,
+          chatConfig: currentVersion.config?.chatConfig || currentVersion.chatConfig,
           description: currentVersion.description,
           model: currentVersion.config?.model || currentVersion.model,
           params: currentVersion.config?.params || currentVersion.params,
+          plugins: currentVersion.config?.plugins || currentVersion.plugins,
           provider: currentVersion.config?.provider || currentVersion.provider,
           systemRole:
             currentVersion.config?.systemRole ||
@@ -132,7 +134,8 @@ const ForkGroupAndChat = memo<{ mobile?: boolean }>(() => {
         // Group content is the supervisor's systemRole (for backward compatibility)
         content: config.systemRole || supervisorConfig?.systemRole,
         ...meta,
-        marketIdentifier: forkResult.group.identifier, // Store the new market identifier
+        // Store marketIdentifier at top-level (same as agents)
+        marketIdentifier: forkResult.group.identifier,
       };
 
       // Step 5: Prepare member agents from market data
@@ -149,9 +152,10 @@ const ForkGroupAndChat = memo<{ mobile?: boolean }>(() => {
           return {
             avatar: currentVersion.avatar,
             backgroundColor: currentVersion.backgroundColor,
+            chatConfig: currentVersion.config?.chatConfig || currentVersion.chatConfig,
             description: currentVersion.description,
             model: currentVersion.config?.model || currentVersion.model,
-            plugins: currentVersion.plugins,
+            plugins: currentVersion.config?.plugins || currentVersion.plugins,
             provider: currentVersion.config?.provider || currentVersion.provider,
             systemRole:
               currentVersion.config?.systemRole ||

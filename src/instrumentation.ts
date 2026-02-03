@@ -1,8 +1,10 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    // Initialize telemetry
-    if (process.env.ENABLE_TELEMETRY) {
-      await import('./instrumentation.node');
+    // Initialize telemetry (only in production or if explicitly enabled in dev)
+    if (!(process.env.NODE_ENV !== 'production' && !process.env.ENABLE_TELEMETRY_IN_DEV)) {
+      if (process.env.ENABLE_TELEMETRY) {
+        await import('./instrumentation.node');
+      }
     }
 
     // Start trigger queue worker in database mode (unless explicitly disabled)

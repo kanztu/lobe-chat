@@ -5,7 +5,7 @@
  * IMPORTANT: Keep this file as CommonJS (.js) for compatibility with startServer.js
  */
 
-const MIGRATION_DOC_BASE = 'https://lobehub.com/docs/self-hosting/advanced/auth';
+const MIGRATION_DOC_BASE = 'https://lobehub.com/docs/self-hosting/migration/v2/auth';
 
 /**
  * Deprecated environment variable checks configuration
@@ -15,6 +15,7 @@ const MIGRATION_DOC_BASE = 'https://lobehub.com/docs/self-hosting/advanced/auth'
  *   message: string;
  *   docUrl?: string;
  *   formatVar?: (envVar: string) => string;
+ *   severity?: 'error' | 'warning';
  * }>}
  */
 const DEPRECATED_CHECKS = [
@@ -85,10 +86,10 @@ const DEPRECATED_CHECKS = [
       const mapping = {
         AUTH_AZURE_AD_ID: 'AUTH_MICROSOFT_ID',
         AUTH_AZURE_AD_SECRET: 'AUTH_MICROSOFT_SECRET',
-        AUTH_AZURE_AD_TENANT_ID: 'No longer needed',
+        AUTH_AZURE_AD_TENANT_ID: 'AUTH_MICROSOFT_TENANT_ID',
         AZURE_AD_CLIENT_ID: 'AUTH_MICROSOFT_ID',
         AZURE_AD_CLIENT_SECRET: 'AUTH_MICROSOFT_SECRET',
-        AZURE_AD_TENANT_ID: 'No longer needed',
+        AZURE_AD_TENANT_ID: 'AUTH_MICROSOFT_TENANT_ID',
       };
       return `${envVar} → ${mapping[envVar]}`;
     },
@@ -135,13 +136,41 @@ const DEPRECATED_CHECKS = [
     name: 'APP_URL Trailing Slash',
   },
   {
+    docUrl: `${MIGRATION_DOC_BASE}/providers/casdoor`,
+    getVars: () => {
+      const providers = process.env['AUTH_SSO_PROVIDERS'] || '';
+      if (providers.includes('casdoor') && !process.env['CASDOOR_WEBHOOK_SECRET']) {
+        return ['CASDOOR_WEBHOOK_SECRET'];
+      }
+      return [];
+    },
+    message:
+      'Casdoor webhook is recommended for syncing user data (email, avatar, etc.) to LobeChat. This is especially important for users migrating from NextAuth to Better Auth - users without email configured in Casdoor will not be able to login. Consider configuring CASDOOR_WEBHOOK_SECRET following the documentation.',
+    name: 'Casdoor Webhook',
+    severity: 'warning',
+  },
+  {
+    docUrl: `${MIGRATION_DOC_BASE}/providers/logto`,
+    getVars: () => {
+      const providers = process.env['AUTH_SSO_PROVIDERS'] || '';
+      if (providers.includes('logto') && !process.env['LOGTO_WEBHOOK_SIGNING_KEY']) {
+        return ['LOGTO_WEBHOOK_SIGNING_KEY'];
+      }
+      return [];
+    },
+    message:
+      'Logto webhook is recommended for syncing user data (email, avatar, etc.) to LobeChat. This is especially important for users migrating from NextAuth to Better Auth - users without email configured in Logto will not be able to login. Consider configuring LOGTO_WEBHOOK_SIGNING_KEY following the documentation.',
+    name: 'Logto Webhook',
+    severity: 'warning',
+  },
+  {
     docUrl: `${MIGRATION_DOC_BASE}/nextauth-to-betterauth`,
     formatVar: (envVar) => {
       const mapping = {
-        AUTH_MICROSOFT_ENTRA_ID_BASE_URL: 'No longer needed',
+        AUTH_MICROSOFT_ENTRA_ID_BASE_URL: 'AUTH_MICROSOFT_AUTHORITY_URL',
         AUTH_MICROSOFT_ENTRA_ID_ID: 'AUTH_MICROSOFT_ID',
         AUTH_MICROSOFT_ENTRA_ID_SECRET: 'AUTH_MICROSOFT_SECRET',
-        AUTH_MICROSOFT_ENTRA_ID_TENANT_ID: 'No longer needed',
+        AUTH_MICROSOFT_ENTRA_ID_TENANT_ID: 'AUTH_MICROSOFT_TENANT_ID',
       };
       return `${envVar} → ${mapping[envVar]}`;
     },
@@ -156,21 +185,45 @@ const DEPRECATED_CHECKS = [
       'Microsoft Entra ID provider has been renamed to Microsoft. Please update your environment variables.',
     name: 'Microsoft Entra ID',
   },
+  {
+    docUrl: MIGRATION_DOC_BASE,
+    getVars: () => {
+      const hasEmailService =
+        process.env['SMTP_HOST'] || process.env['EMAIL_SERVICE_PROVIDER'] === 'resend';
+      const hasEmailVerification = process.env['AUTH_EMAIL_VERIFICATION'] === '1';
+      if (hasEmailService && !hasEmailVerification) {
+        return ['AUTH_EMAIL_VERIFICATION'];
+      }
+      return [];
+    },
+    message:
+      'Email service is configured but email verification is disabled. Consider setting AUTH_EMAIL_VERIFICATION=1 to verify user email ownership during registration.',
+    name: 'Email Verification',
+    severity: 'warning',
+  },
 ];
 
 /**
- * Print a single deprecation error block
+ * Print a single deprecation block (error or warning)
  */
-function printErrorBlock(name, vars, message, docUrl, formatVar) {
-  console.error(`\n❌ ${name}`);
-  console.error('─'.repeat(50));
-  console.error('Detected deprecated environment variables:');
+function printIssueBlock(name, vars, message, docUrl, formatVar, severity = 'error') {
+  const isWarning = severity === 'warning';
+  const icon = isWarning ? '⚠️' : '❌';
+  const log = isWarning ? console.warn : console.error;
+
+  log(`\n${icon} ${name}`);
+  log('─'.repeat(50));
+  log(
+    isWarning
+      ? 'Missing recommended environment variables:'
+      : 'Detected deprecated environment variables:',
+  );
   for (const envVar of vars) {
-    console.error(`  • ${formatVar ? formatVar(envVar) : envVar}`);
+    log(`  • ${formatVar ? formatVar(envVar) : envVar}`);
   }
-  console.error(`\n${message}`);
+  log(`\n${message}`);
   if (docUrl) {
-    console.error(`📖 Migration guide: ${docUrl}`);
+    log(`📖 Documentation: ${docUrl}`);
   }
 }
 
@@ -182,23 +235,58 @@ function printErrorBlock(name, vars, message, docUrl, formatVar) {
 function checkDeprecatedAuth(options = {}) {
   const { action = 'redeploy' } = options;
 
-  const foundIssues = [];
+  const errors = [];
+  const warnings = [];
+
   for (const check of DEPRECATED_CHECKS) {
     const foundVars = check.getVars();
     if (foundVars.length > 0) {
-      foundIssues.push({ ...check, foundVars });
+      const issue = { ...check, foundVars };
+      if (check.severity === 'warning') {
+        warnings.push(issue);
+      } else {
+        errors.push(issue);
+      }
     }
   }
 
-  if (foundIssues.length > 0) {
+  // Print warnings (non-blocking)
+  if (warnings.length > 0) {
+    console.warn('\n' + '═'.repeat(70));
+    console.warn(`⚠️  WARNING: Found ${warnings.length} recommended configuration(s) missing`);
+    console.warn('═'.repeat(70));
+
+    for (const issue of warnings) {
+      printIssueBlock(
+        issue.name,
+        issue.foundVars,
+        issue.message,
+        issue.docUrl,
+        issue.formatVar,
+        'warning',
+      );
+    }
+
+    console.warn('\n' + '═'.repeat(70));
+    console.warn('These are recommendations. Your application will still run.');
+    console.warn('═'.repeat(70) + '\n');
+  }
+
+  // Print errors and exit (blocking)
+  if (errors.length > 0) {
     console.error('\n' + '═'.repeat(70));
-    console.error(
-      `❌ ERROR: Found ${foundIssues.length} deprecated environment variable issue(s)!`,
-    );
+    console.error(`❌ ERROR: Found ${errors.length} deprecated environment variable issue(s)!`);
     console.error('═'.repeat(70));
 
-    for (const issue of foundIssues) {
-      printErrorBlock(issue.name, issue.foundVars, issue.message, issue.docUrl, issue.formatVar);
+    for (const issue of errors) {
+      printIssueBlock(
+        issue.name,
+        issue.foundVars,
+        issue.message,
+        issue.docUrl,
+        issue.formatVar,
+        'error',
+      );
     }
 
     console.error('\n' + '═'.repeat(70));

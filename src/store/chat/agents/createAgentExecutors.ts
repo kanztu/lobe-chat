@@ -1397,6 +1397,7 @@ export const createAgentExecutors = (context: {
               {
                 agentId,
                 content: '',
+                createdAt: Date.now() + taskIndex,
                 metadata: { instruction: task.instruction },
                 parentId: parentMessageId,
                 role: 'task',
@@ -2083,6 +2084,7 @@ export const createAgentExecutors = (context: {
               {
                 agentId,
                 content: '',
+                createdAt: Date.now() + taskIndex,
                 metadata: { instruction: task.instruction, taskTitle: task.description },
                 parentId: parentMessageId,
                 role: 'task',

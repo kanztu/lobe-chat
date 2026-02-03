@@ -2,8 +2,9 @@
 
 import { Button, Flexbox } from '@lobehub/ui';
 import { Divider } from 'antd';
+import { useTheme } from 'antd-style';
 import isEqual from 'fast-deep-equal';
-import { Clock, PlayIcon } from 'lucide-react';
+import { Clock, PlayIcon, Settings2Icon } from 'lucide-react';
 import React, { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import urlJoin from 'url-join';
@@ -15,6 +16,7 @@ import { agentSelectors } from '@/store/agent/selectors';
 import { useChatStore } from '@/store/chat';
 
 import AgentCronJobs from '../AgentCronJobs';
+import AgentSettings from '../AgentSettings';
 import EditorCanvas from '../EditorCanvas';
 import AgentPublishButton from '../Header/AgentPublishButton';
 import AgentHeader from './AgentHeader';
@@ -54,6 +56,7 @@ const ProfileEditor = memo(() => {
           <ModelSelect
             initialWidth
             onChange={updateConfig}
+            popupWidth={400}
             value={{
               model: config.model,
               provider: config.provider,
@@ -91,6 +94,8 @@ const ProfileEditor = memo(() => {
       <EditorCanvas />
       {/* Agent Cron Jobs Display (only show if jobs exist) */}
       <AgentCronJobs />
+      {/* Advanced Settings Modal */}
+      <AgentSettings />
     </>
   );
 });

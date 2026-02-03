@@ -473,8 +473,19 @@ export const createTokenSpeedCalculator = (
 
   const process = (chunk: StreamProtocolChunk) => {
     let result = [chunk];
-    // if the chunk is the first text or reasoning chunk, set as output start
-    if (!outputStartAt && (chunk.type === 'text' || chunk.type === 'reasoning')) {
+    // Set outputStartAt when receiving the first content chunk (for TTFT calculation)
+    // - text/reasoning: standard text output events
+    // - content_part/reasoning_part: multimodal output events used by Gemini 3+ models
+    //   which emit structured parts instead of plain text events
+    // - tool_calls: function calling output events
+    if (
+      !outputStartAt &&
+      (chunk.type === 'text' ||
+        chunk.type === 'reasoning' ||
+        chunk.type === 'content_part' ||
+        chunk.type === 'reasoning_part' ||
+        chunk.type === 'tool_calls')
+    ) {
       outputStartAt = Date.now();
     }
 
