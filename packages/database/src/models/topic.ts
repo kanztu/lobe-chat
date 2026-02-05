@@ -819,4 +819,53 @@ export class TopicModel {
       topics: topicList,
     }));
   };
+
+
+  /**
+   * Clear trigger references (cronJobId/triggerId) from topic metadata
+   * when a cron job/trigger is deleted.
+   * This prevents orphaned references in the database.
+   */
+  clearTriggerReferences = async (triggerIdToRemove: string) => {
+    // Find topics that have this trigger ID in their metadata (either as cronJobId or triggerId)
+    const affectedTopics = await this.db
+      .select({ id: topics.id, metadata: topics.metadata })
+      .from(topics)
+      .where(
+        and(
+          eq(topics.userId, this.userId),
+          or(
+            sql`${topics.metadata}->>'cronJobId' = ${triggerIdToRemove}`,
+            sql`${topics.metadata}->>'triggerId' = ${triggerIdToRemove}`,
+          ),
+        ),
+      );
+
+    if (affectedTopics.length === 0) {
+      return { affectedCount: 0 };
+    }
+
+    // Update each topic to remove the trigger reference from metadata
+    // Note: triggerId is used by new trigger system but not yet in ChatTopicMetadata type
+    const updatePromises = affectedTopics.map(async (topic) => {
+      const metadata = topic.metadata as Record<string, unknown> | undefined;
+      const updatedMetadata = { ...metadata };
+
+      if (updatedMetadata.cronJobId === triggerIdToRemove) {
+        delete updatedMetadata.cronJobId;
+      }
+      if (updatedMetadata.triggerId === triggerIdToRemove) {
+        delete updatedMetadata.triggerId;
+      }
+
+      return this.db
+        .update(topics)
+        .set({ metadata: updatedMetadata as ChatTopicMetadata })
+        .where(and(eq(topics.id, topic.id), eq(topics.userId, this.userId)));
+    });
+
+    await Promise.all(updatePromises);
+
+    return { affectedCount: affectedTopics.length };
+  };
 }

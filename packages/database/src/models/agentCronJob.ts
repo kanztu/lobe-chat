@@ -124,47 +124,6 @@ export class AgentCronJobModel {
     return result.length > 0;
   }
 
-  // Update execution statistics after job execution
-  static async updateExecutionStats(
-    db: LobeChatDatabase,
-    jobId: string,
-  ): Promise<AgentCronJob | null> {
-    // Update execution statistics and decrement remaining executions
-    const result = await db
-      .update(agentCronJobs)
-      .set({
-        lastExecutedAt: new Date(),
-        remainingExecutions: sql`
-          CASE 
-            WHEN ${agentCronJobs.remainingExecutions} IS NULL THEN NULL
-            ELSE ${agentCronJobs.remainingExecutions} - 1
-          END
-        `,
-        totalExecutions: sql`${agentCronJobs.totalExecutions} + 1`,
-        updatedAt: new Date(),
-      })
-      .where(eq(agentCronJobs.id, jobId))
-      .returning();
-
-    const updatedJob = result[0];
-
-    // Auto-disable job if remaining executions reached 0
-    if (updatedJob && updatedJob.remainingExecutions === 0) {
-      await db
-        .update(agentCronJobs)
-        .set({
-          enabled: false,
-          updatedAt: new Date(),
-        })
-        .where(eq(agentCronJobs.id, jobId));
-
-      // Return updated job with enabled = false
-      return { ...updatedJob, enabled: false };
-    }
-
-    return updatedJob || null;
-  }
-
   // Reset execution counts and re-enable job
   async resetExecutions(id: string, newMaxExecutions?: number): Promise<AgentCronJob | null> {
     const result = await this.db

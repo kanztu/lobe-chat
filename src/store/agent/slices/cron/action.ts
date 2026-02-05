@@ -48,23 +48,19 @@ export const createCronSlice: StateCreator<
     const { activeAgentId, internal_refreshCronTopics } = get();
     if (!activeAgentId) return null;
 
-    try {
-      const result = await agentCronJobService.create({
-        agentId: activeAgentId,
-        content: '',
-        cronPattern: '*/30 * * * *',
-        enabled: false,
-      });
+    const result = await agentCronJobService.create({
+      agentId: activeAgentId,
+      content: '',
+      cronPattern: '*/30 * * * *',
+      enabled: false,
+    });
 
-      if (result.success) {
-        await internal_refreshCronTopics();
-        return result.data.id;
-      }
-      return null;
-    } catch (error) {
-      console.error('Failed to create cron job:', error);
-      return null;
+    if (!result.success) {
+      throw new Error('Failed to create cron job');
     }
+
+    await internal_refreshCronTopics();
+    return result.data.id;
   },
 
   internal_refreshCronTopics: async () => {

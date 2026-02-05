@@ -38,8 +38,13 @@ export interface TopicUserMemoryExtractRunState {
 export interface ChatTopicMetadata {
   /**
    * Cron job ID that triggered this topic creation (if created by scheduled task)
+   * @deprecated Use triggerId instead
    */
   cronJobId?: string;
+  /**
+   * Trigger ID that created this topic (for cron, webhook, api, or manual triggers)
+   */
+  triggerId?: string;
   model?: string;
   provider?: string;
   userMemoryExtractRunState?: TopicUserMemoryExtractRunState;

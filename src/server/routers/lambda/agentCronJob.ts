@@ -8,6 +8,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 import { AgentCronJobModel } from '@/database/models/agentCronJob';
+import { TopicModel } from '@/database/models/topic';
 import { authedProcedure, router } from '@/libs/trpc/lambda';
 import { serverDatabase } from '@/libs/trpc/lambda/middleware';
 
@@ -108,6 +109,10 @@ export const agentCronJobRouter = router({
       const { id } = input;
 
       try {
+        // Clean up orphaned topic metadata references before deleting the cron job
+        const topicModel = new TopicModel(db, userId);
+        await topicModel.clearTriggerReferences(id);
+
         const cronJobModel = new AgentCronJobModel(db, userId);
         const deleted = await cronJobModel.delete(id);
 
