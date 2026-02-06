@@ -205,7 +205,7 @@ export class LobeBedrockAI implements LobeRuntimeAI {
     }
 
     const anthropicBase = {
-      ...(payload.enableContext1M ? { anthropic_beta: 'context-1m-2025-08-07' } : {}),
+      ...(payload.enableContext1M ? { anthropic_beta: ['context-1m-2025-08-07'] } : {}),
       anthropic_version: 'bedrock-2023-05-31',
       max_tokens: resolvedMaxTokens,
       messages: postMessages,
