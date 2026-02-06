@@ -1,5 +1,4 @@
 import {
-  type InsertAgentCronJob,
   InsertAgentCronJobSchema,
   type UpdateAgentCronJob,
   UpdateAgentCronJobSchema,
@@ -31,10 +30,8 @@ const batchUpdateStatusSchema = z.object({
   ids: z.array(z.string()),
 });
 
-// Create input schema for tRPC that omits server-managed fields
-const createAgentCronJobInputSchema = InsertAgentCronJobSchema.omit({
-  userId: true, // Provided by authentication context
-});
+// Create input schema for tRPC (userId is set server-side from auth context)
+const createAgentCronJobInputSchema = InsertAgentCronJobSchema;
 
 /**
  * Agent Cron Job tRPC Router
@@ -80,9 +77,7 @@ export const agentCronJobRouter = router({
 
       try {
         const cronJobModel = new AgentCronJobModel(db, userId);
-        // Add userId to the input data since it's provided by authentication context
-        const cronJobData = { ...input, userId };
-        const cronJob = await cronJobModel.create(cronJobData as InsertAgentCronJob);
+        const cronJob = await cronJobModel.create(input);
 
         return {
           data: cronJob,

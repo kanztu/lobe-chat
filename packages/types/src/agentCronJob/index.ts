@@ -14,7 +14,7 @@ export interface ExecutionConditions {
 export const cronPatternSchema = z
   .string()
   .regex(
-    /^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\d+(ns|us|µs|ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*) ?){5,7})$/,
+    /^(@(annually|yearly|monthly|weekly|daily|hourly))|(@every (\d+(ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*) ?){5})$/,
     'Invalid cron pattern',
   );
 
@@ -99,8 +99,21 @@ export const InsertAgentCronJobSchema = z.object({
   maxExecutions: z.number().min(1).max(10_000).optional().nullable(),
   name: z.string().optional().nullable(),
   remainingExecutions: z.number().optional().nullable(),
-  timezone: z.string().optional().nullable(),
-  userId: z.string().optional(),
+  timezone: z
+    .string()
+    .refine(
+      (tz) => {
+        try {
+          Intl.DateTimeFormat(undefined, { timeZone: tz });
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid timezone' },
+    )
+    .optional()
+    .nullable(),
 });
 
 // Update schema (all fields optional)

@@ -1,7 +1,7 @@
 'use client';
 
 import { Flexbox } from '@lobehub/ui';
-import { Typography } from 'antd';
+import { Skeleton, Typography } from 'antd';
 import { Clock } from 'lucide-react';
 import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +41,20 @@ const AgentCronJobs = memo(() => {
 
   if (!agentId) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <Flexbox gap={12} style={{ marginBottom: 16, marginTop: 16 }}>
+        <Title level={5} style={{ margin: 0 }}>
+          <Flexbox align="center" gap={8} horizontal>
+            <Clock size={16} />
+            {t('agentCronJobs.title')}
+          </Flexbox>
+        </Title>
+        <Skeleton active paragraph={{ rows: 3 }} />
+      </Flexbox>
+    );
   }
 
   const hasCronJobs = cronJobs && cronJobs.length > 0;

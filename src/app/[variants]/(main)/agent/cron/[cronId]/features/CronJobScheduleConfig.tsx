@@ -101,6 +101,8 @@ const CronJobScheduleConfig = memo<CronJobScheduleConfigProps>(
       const newWeekdays = weekdays.includes(day)
         ? weekdays.filter((d) => d !== day)
         : [...weekdays, day];
+      // Prevent deselecting all weekdays
+      if (newWeekdays.length === 0) return;
       onScheduleChange({ weekdays: newWeekdays });
     };
 
@@ -158,6 +160,7 @@ const CronJobScheduleConfig = memo<CronJobScheduleConfigProps>(
                 <InputNumber
                   max={24}
                   min={1}
+                  precision={0}
                   onChange={(value) => onScheduleChange({ hourlyInterval: value ?? 1 })}
                   style={{ width: 70 }}
                   value={hourlyInterval ?? 1}
@@ -192,12 +195,21 @@ const CronJobScheduleConfig = memo<CronJobScheduleConfigProps>(
               <Flexbox gap={6} horizontal>
                 {WEEKDAYS.map(({ key, label }) => (
                   <div
+                    aria-pressed={weekdays.includes(key)}
                     className={cx(
                       styles.weekdayButton,
                       weekdays.includes(key) && styles.weekdayButtonActive,
                     )}
                     key={key}
                     onClick={() => toggleWeekday(key)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleWeekday(key);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     {t(label as any)}
                   </div>

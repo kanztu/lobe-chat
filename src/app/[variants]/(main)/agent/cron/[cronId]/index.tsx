@@ -47,7 +47,7 @@ interface CronJobDraft {
 
 type AutoSaveStatus = 'idle' | 'saving' | 'saved';
 interface AutoSaveState {
-  lastUpdatedTime: Date | null | any;
+  lastUpdatedTime: Date | null;
   status: AutoSaveStatus;
 }
 
@@ -89,6 +89,7 @@ const CronJobDetailPage = memo(() => {
 
   const [draft, setDraft] = useState<CronJobDraft | null>(null);
   const [isTogglingEnabled, setIsTogglingEnabled] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const draftRef = useRef<CronJobDraft | null>(null);
   const contentRef = useRef('');
   const pendingSaveRef = useRef(false);
@@ -210,7 +211,7 @@ const CronJobDetailPage = memo(() => {
       } catch (error) {
         console.error('Failed to update cron job:', error);
         setAutoSaveState({ status: 'idle' });
-        message.error('Failed to update scheduled task');
+        message.error(t('agentCronJobs.updateFailed' as any));
       }
     },
     { wait: EDITOR_DEBOUNCE_TIME },
@@ -279,12 +280,12 @@ const CronJobDetailPage = memo(() => {
       } catch (error) {
         console.error('Failed to update cron job status:', error);
         setAutoSaveState({ status: 'idle' });
-        message.error('Failed to update scheduled task');
+        message.error(t('agentCronJobs.updateFailed' as any));
       } finally {
         setIsTogglingEnabled(false);
       }
     },
-    [cronId, internal_refreshCronTopics],
+    [cronId, internal_refreshCronTopics, t],
   );
 
   const handleDeleteCronJob = useCallback(async () => {
@@ -325,7 +326,7 @@ const CronJobDetailPage = memo(() => {
           }
         } catch (error) {
           console.error('Failed to delete cron job:', error);
-          message.error('Failed to delete scheduled task');
+          message.error(t('agentCronJobs.deleteFailed' as any));
         }
       },
       title: t('agentCronJobs.deleteCronJob' as any),
@@ -334,21 +335,22 @@ const CronJobDetailPage = memo(() => {
 
   const handleSaveNewJob = useCallback(async () => {
     if (!aid) {
-      message.error('Agent ID is required');
+      message.error(t('agentCronJobs.agentIdRequired' as any));
       return;
     }
 
     const payload = buildUpdateData(draftRef.current, contentRef.current);
     if (!payload) {
-      message.error('Please fill in all required fields');
+      message.error(t('agentCronJobs.fieldsRequired' as any));
       return;
     }
 
     if (!payload.content || !payload.name || !payload.cronPattern) {
-      message.error('Name and content are required');
+      message.error(t('agentCronJobs.fieldsRequired' as any));
       return;
     }
 
+    setIsSaving(true);
     setAutoSaveState({ status: 'saving' });
     try {
       const result = await agentCronJobService.create({
@@ -365,7 +367,7 @@ const CronJobDetailPage = memo(() => {
 
       if (result.success && result.data) {
         setAutoSaveState({ lastUpdatedTime: new Date(), status: 'saved' });
-        message.success('Scheduled task created successfully');
+        message.success(t('agentCronJobs.createSuccess'));
         refreshCronList();
         // Navigate to the newly created job
         router.push(`/agent/${aid}/cron/${result.data.id}`);
@@ -375,9 +377,11 @@ const CronJobDetailPage = memo(() => {
     } catch (error) {
       console.error('Failed to create cron job:', error);
       setAutoSaveState({ status: 'idle' });
-      message.error('Failed to create scheduled task');
+      message.error(t('agentCronJobs.createFailed' as any));
+    } finally {
+      setIsSaving(false);
     }
-  }, [aid, buildUpdateData, refreshCronList, router]);
+  }, [aid, buildUpdateData, refreshCronList, router, t]);
 
   // Initialize draft for new jobs
   useEffect(() => {
@@ -504,7 +508,7 @@ const CronJobDetailPage = memo(() => {
               {isNewJob && (
                 <CronJobSaveButton
                   disabled={!draft.name || !draft.content}
-                  loading={false}
+                  loading={isSaving}
                   onSave={handleSaveNewJob}
                 />
               )}

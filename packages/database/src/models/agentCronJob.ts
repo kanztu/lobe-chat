@@ -13,9 +13,9 @@ export class AgentCronJobModel {
   private readonly userId: string;
   private readonly db: LobeChatDatabase;
 
-  constructor(db: LobeChatDatabase, userId?: string) {
+  constructor(db: LobeChatDatabase, userId: string) {
     this.db = db;
-    this.userId = userId!;
+    this.userId = userId;
   }
 
   // Create a new cron job
@@ -174,6 +174,7 @@ export class AgentCronJobModel {
   async getExecutionStats(): Promise<{
     activeJobs: number;
     completedExecutions: number;
+    hasUnlimitedJobs: boolean;
     pendingExecutions: number;
     totalJobs: number;
   }> {
@@ -183,11 +184,14 @@ export class AgentCronJobModel {
         completedExecutions: sql<number>`sum(${agentCronJobs.totalExecutions})`,
         pendingExecutions: sql<number>`
           sum(
-                    case when ${agentCronJobs.remainingExecutions} is null then 999999
-                    else coalesce(${agentCronJobs.remainingExecutions}, 0) end
-                  )
+            case when ${agentCronJobs.remainingExecutions} is null then 0
+            else ${agentCronJobs.remainingExecutions} end
+          )
         `,
         totalJobs: sql<number>`count(*)`,
+        unlimitedJobCount: sql<number>`
+          sum(case when ${agentCronJobs.remainingExecutions} is null then 1 else 0 end)
+        `,
       })
       .from(agentCronJobs)
       .where(eq(agentCronJobs.userId, this.userId));
@@ -196,13 +200,16 @@ export class AgentCronJobModel {
     return {
       activeJobs: Number(stats.activeJobs),
       completedExecutions: Number(stats.completedExecutions),
-      pendingExecutions: Number(stats.pendingExecutions === 999_999 ? 0 : stats.pendingExecutions),
+      hasUnlimitedJobs: Number(stats.unlimitedJobCount || 0) > 0,
+      pendingExecutions: Number(stats.pendingExecutions || 0),
       totalJobs: Number(stats.totalJobs),
     };
   }
 
   // Batch enable/disable jobs
   async batchUpdateStatus(ids: string[], enabled: boolean): Promise<number> {
+    if (ids.length === 0) return 0;
+
     const result = await this.db
       .update(agentCronJobs)
       .set({

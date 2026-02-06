@@ -3,10 +3,13 @@ import { App } from 'antd';
 import { Trash } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 
+import { useQueryRoute } from '@/hooks/useQueryRoute';
 import { agentCronJobService } from '@/services/agentCronJob';
 import { topicService } from '@/services/topic';
 import { useAgentStore } from '@/store/agent';
+import { useChatStore } from '@/store/chat';
 
 export const useCronJobDropdownMenu = (
   cronJobId: string,
@@ -14,6 +17,10 @@ export const useCronJobDropdownMenu = (
 ): MenuProps['items'] => {
   const { t } = useTranslation(['setting', 'common']);
   const { modal } = App.useApp();
+  const router = useQueryRoute();
+  const { aid } = useParams<{ aid?: string; cronId?: string }>();
+  const activeTopicId = useChatStore((s) => s.activeTopicId);
+  const switchTopic = useChatStore((s) => s.switchTopic);
 
   const refreshCronTopics = useAgentStore((s) => s.internal_refreshCronTopics);
 
@@ -21,8 +28,13 @@ export const useCronJobDropdownMenu = (
     try {
       // Delete all topics associated with this cron job
       if (topics.length > 0) {
-        const topicIds = topics.map((t) => t.id);
+        const topicIds = topics.map((topic) => topic.id);
         await topicService.batchRemoveTopics(topicIds);
+
+        // Reset active topic if it was among deleted topics
+        if (activeTopicId && topicIds.includes(activeTopicId)) {
+          switchTopic(null);
+        }
       }
 
       // Delete the cron job
@@ -30,6 +42,12 @@ export const useCronJobDropdownMenu = (
 
       // Refresh the cron topics list
       await refreshCronTopics();
+
+      // Navigate away if currently viewing the deleted cron job
+      const currentPath = window.location.pathname;
+      if (currentPath.includes(cronJobId)) {
+        router.push(aid ? `/agent/${aid}` : '/agent');
+      }
     } catch (error) {
       console.error('Failed to delete cron job:', error);
       modal.error({
@@ -37,14 +55,19 @@ export const useCronJobDropdownMenu = (
         title: t('error' as any, { ns: 'common' }),
       });
     }
-  }, [cronJobId, topics, refreshCronTopics, modal, t]);
+  }, [cronJobId, topics, refreshCronTopics, modal, t, activeTopicId, switchTopic, router, aid]);
 
   const handleClearTopics = useCallback(async () => {
     if (topics.length === 0) return;
 
     try {
-      const topicIds = topics.map((t) => t.id);
+      const topicIds = topics.map((topic) => topic.id);
       await topicService.batchRemoveTopics(topicIds);
+
+      // Reset active topic if it was among deleted topics
+      if (activeTopicId && topicIds.includes(activeTopicId)) {
+        switchTopic(null);
+      }
 
       // Refresh the cron topics list
       await refreshCronTopics();
@@ -55,7 +78,7 @@ export const useCronJobDropdownMenu = (
         title: t('error' as any, { ns: 'common' }),
       });
     }
-  }, [topics, refreshCronTopics, modal, t]);
+  }, [topics, refreshCronTopics, modal, t, activeTopicId, switchTopic]);
 
   return useMemo(
     () =>

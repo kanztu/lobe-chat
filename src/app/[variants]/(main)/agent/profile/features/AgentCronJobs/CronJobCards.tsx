@@ -100,7 +100,7 @@ const CronJobCards = memo<CronJobCardsProps>(({ agentId, onDelete, onEdit }) => 
                     >
                       {job.name || t('agentCronJobs.unnamedTask')}
                     </span>
-                    <Badge status={statusInfo.status} />
+                    <Badge status={statusInfo.status} title={t(statusInfo.text as any)} />
                   </Flexbox>
                   <Switch
                     checked={job.enabled || false}
@@ -116,11 +116,11 @@ const CronJobCards = memo<CronJobCardsProps>(({ agentId, onDelete, onEdit }) => 
                   style={{
                     WebkitBoxOrient: 'vertical',
                     WebkitLineClamp: 2,
-                    color: '#666',
                     display: '-webkit-box',
                     fontSize: '12px',
                     overflow: 'hidden',
                   }}
+                  type="secondary"
                 >
                   {job.content}
                 </Text>

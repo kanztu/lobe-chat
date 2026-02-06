@@ -93,7 +93,8 @@ const CronJobList = memo<CronJobListProps>(({ cronJobs, loading, onEdit, onDelet
                 <Flexbox gap={4}>
                   <Paragraph
                     ellipsis={{ rows: 2, tooltip: job.content }}
-                    style={{ color: '#666', fontSize: '12px', margin: 0 }}
+                    style={{ fontSize: '12px', margin: 0 }}
+                    type="secondary"
                   >
                     {job.content}
                   </Paragraph>

@@ -9,6 +9,8 @@ import type {
 } from '@/database/schemas/agentCronJob';
 import { agentCronJobService } from '@/services/agentCronJob';
 
+const EMPTY_RESPONSE = { data: [] as any[], success: true } as const;
+
 export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
   const { t } = useTranslation('setting');
 
@@ -24,7 +26,7 @@ export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
     {
       onError: (error) => {
         console.error('Failed to fetch cron jobs:', error);
-        message.error('Failed to load scheduled tasks');
+        message.error(t('agentCronJobs.loadFailed' as any));
       },
     },
   );
@@ -35,23 +37,16 @@ export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
       if (!agentId) return;
 
       try {
-        // Optimistic update: immediately add to UI before server response
         const result = await mutate(
-          async () => {
-            // Create on server
-            const result = await agentCronJobService.create({
+          async (currentData) => {
+            await agentCronJobService.create({
               ...data,
               agentId,
             });
-
-            if (result.success) {
-              message.success(t('agentCronJobs.createSuccess'));
-              return result; // Return new data from server
-            }
-            throw new Error('Failed to create');
+            message.success(t('agentCronJobs.createSuccess'));
+            return currentData;
           },
           {
-            // Revalidate after creation to get server-generated fields
             revalidate: true,
           },
         );
@@ -59,7 +54,7 @@ export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
         return result?.data;
       } catch (error) {
         console.error('Failed to create cron job:', error);
-        message.error('Failed to create scheduled task');
+        message.error(t('agentCronJobs.createFailed' as any));
         throw error;
       }
     },
@@ -70,22 +65,15 @@ export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
   const updateCronJob = useCallback(
     async (id: string, data: UpdateAgentCronJobData) => {
       try {
-        // Optimistic update: immediately update UI before server response
         await mutate(
           async (currentData) => {
-            // Update the server
-            const result = await agentCronJobService.update(id, data);
-
-            if (result.success) {
-              message.success(t('agentCronJobs.updateSuccess'));
-              return result; // Return new data from server
-            }
-            return currentData; // Rollback on failure
+            await agentCronJobService.update(id, data);
+            message.success(t('agentCronJobs.updateSuccess'));
+            return currentData;
           },
           {
-            // Optimistically update the UI immediately
             optimisticData: (currentData) => {
-              if (!currentData?.data) return currentData;
+              if (!currentData?.data) return currentData ?? EMPTY_RESPONSE;
 
               return {
                 ...currentData,
@@ -94,15 +82,13 @@ export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
                 ),
               };
             },
-            // Don't revalidate after mutation completes (data is already fresh)
-            revalidate: false,
-            // Rollback on error
+            revalidate: true,
             rollbackOnError: true,
           },
         );
       } catch (error) {
         console.error('Failed to update cron job:', error);
-        message.error('Failed to update scheduled task');
+        message.error(t('agentCronJobs.updateFailed' as any));
         throw error;
       }
     },
@@ -113,37 +99,28 @@ export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
   const deleteCronJob = useCallback(
     async (id: string) => {
       try {
-        // Optimistic update: immediately remove from UI before server response
         await mutate(
           async (currentData) => {
-            // Delete from server
-            const result = await agentCronJobService.delete(id);
-
-            if (result.success) {
-              message.success(t('agentCronJobs.deleteSuccess'));
-              return result; // Return new data from server
-            }
-            return currentData; // Rollback on failure
+            await agentCronJobService.delete(id);
+            message.success(t('agentCronJobs.deleteSuccess'));
+            return currentData;
           },
           {
-            // Optimistically remove from UI immediately
             optimisticData: (currentData) => {
-              if (!currentData?.data) return currentData;
+              if (!currentData?.data) return currentData ?? EMPTY_RESPONSE;
 
               return {
                 ...currentData,
                 data: currentData.data.filter((job) => job.id !== id),
               };
             },
-            // Don't revalidate after mutation completes
-            revalidate: false,
-            // Rollback on error
+            revalidate: true,
             rollbackOnError: true,
           },
         );
       } catch (error) {
         console.error('Failed to delete cron job:', error);
-        message.error('Failed to delete scheduled task');
+        message.error(t('agentCronJobs.deleteFailed' as any));
         throw error;
       }
     },
@@ -164,22 +141,15 @@ export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
   const resetExecutions = useCallback(
     async (id: string, newMaxExecutions?: number) => {
       try {
-        // Optimistic update: immediately update execution counts in UI
         await mutate(
           async (currentData) => {
-            // Reset on server
-            const result = await agentCronJobService.resetExecutions(id, newMaxExecutions);
-
-            if (result.success) {
-              message.success('Execution counts reset successfully');
-              return result; // Return new data from server
-            }
-            return currentData; // Rollback on failure
+            await agentCronJobService.resetExecutions(id, newMaxExecutions);
+            message.success(t('agentCronJobs.resetSuccess' as any));
+            return currentData;
           },
           {
-            // Optimistically update the UI immediately
             optimisticData: (currentData) => {
-              if (!currentData?.data) return currentData;
+              if (!currentData?.data) return currentData ?? EMPTY_RESPONSE;
 
               return {
                 ...currentData,
@@ -194,19 +164,17 @@ export const useAgentCronJobs = (agentId?: string, enabled: boolean = true) => {
                 ),
               };
             },
-            // Don't revalidate after mutation completes
-            revalidate: false,
-            // Rollback on error
+            revalidate: true,
             rollbackOnError: true,
           },
         );
       } catch (error) {
         console.error('Failed to reset executions:', error);
-        message.error('Failed to reset execution counts');
+        message.error(t('agentCronJobs.resetFailed' as any));
         throw error;
       }
     },
-    [mutate],
+    [mutate, t],
   );
 
   return {

@@ -30,8 +30,21 @@ export async function enqueueTriggerJob(
 
   const db = await getServerDB();
 
-  // Check idempotency
+  const values = {
+    agentId,
+    attempts: 0,
+    idempotencyKey: idempotencyKey || null,
+    maxAttempts,
+    prompt,
+    scheduledAt: new Date(),
+    status: 'pending' as const,
+    triggerId,
+    triggerPayload: payload,
+    userId,
+  };
+
   if (idempotencyKey) {
+    // Use ON CONFLICT for atomic idempotency
     const existing = await db
       .select()
       .from(agentTriggerQueue)
@@ -45,26 +58,28 @@ export async function enqueueTriggerJob(
     }
   }
 
-  // Insert job
-  const job = await db
-    .insert(agentTriggerQueue)
-    .values({
-      agentId,
-      attempts: 0,
-      idempotencyKey: idempotencyKey || null,
-      maxAttempts,
-      prompt,
-      scheduledAt: new Date(),
-      status: 'pending',
-      triggerId,
-      triggerPayload: payload,
-      userId,
-    })
-    .returning()
-    .then((rows) => rows[0]);
+  try {
+    const job = await db
+      .insert(agentTriggerQueue)
+      .values(values)
+      .returning()
+      .then((rows) => rows[0]);
 
-  console.log(`Enqueued job ${job.id} for trigger ${triggerId}`);
-  return job;
+    console.log(`Enqueued job ${job.id} for trigger ${triggerId}`);
+    return job;
+  } catch (error: any) {
+    // Handle unique constraint violation (race condition with idempotency key)
+    if (error?.code === '23505' && idempotencyKey) {
+      const existing = await db
+        .select()
+        .from(agentTriggerQueue)
+        .where(eq(agentTriggerQueue.idempotencyKey, idempotencyKey))
+        .limit(1)
+        .then((rows) => rows[0]);
+      if (existing) return existing;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -78,40 +93,51 @@ export async function enqueueTriggerJob(
 export async function getNextPendingJob(): Promise<TriggerQueueJob | undefined> {
   const db = await getServerDB();
 
-  // Use raw SQL for FOR UPDATE SKIP LOCKED support
-  // This prevents multiple workers from grabbing the same job
-  const result = await db.execute(sql`
-    SELECT * FROM agent_trigger_queue
-    WHERE status = 'pending'
-      AND scheduled_at <= NOW()
-    ORDER BY scheduled_at
-    LIMIT 1
-    FOR UPDATE SKIP LOCKED
-  `);
+  // Must wrap SELECT FOR UPDATE + status UPDATE in a single transaction
+  // to hold the row lock while marking it as processing
+  const result = await db.transaction(async (tx) => {
+    const rows = await tx.execute(sql`
+      SELECT * FROM agent_trigger_queue
+      WHERE status = 'pending'
+        AND scheduled_at <= NOW()
+      ORDER BY scheduled_at
+      LIMIT 1
+      FOR UPDATE SKIP LOCKED
+    `);
 
-  const row = result.rows[0];
-  if (!row) return undefined;
+    const row = rows.rows?.[0];
+    if (!row) return undefined;
 
-  // Map snake_case database columns to camelCase TypeScript properties
-  // Raw SQL returns columns in snake_case but TypeScript expects camelCase
-  return {
-    agentId: row.agent_id,
-    attempts: row.attempts,
-    completedAt: row.completed_at,
-    createdAt: row.created_at,
-    error: row.error,
-    id: row.id,
-    idempotencyKey: row.idempotency_key,
-    maxAttempts: row.max_attempts,
-    prompt: row.prompt,
-    scheduledAt: row.scheduled_at,
-    startedAt: row.started_at,
-    status: row.status,
-    topicId: row.topic_id,
-    triggerId: row.trigger_id,
-    triggerPayload: row.trigger_payload,
-    userId: row.user_id,
-  } as TriggerQueueJob;
+    // Mark as processing within the same transaction to hold the lock
+    await tx.execute(sql`
+      UPDATE agent_trigger_queue
+      SET status = 'processing', started_at = NOW(), attempts = COALESCE(attempts, 0) + 1
+      WHERE id = ${row.id}
+    `);
+
+    // Map snake_case database columns to camelCase TypeScript properties
+    // Raw SQL returns columns in snake_case but TypeScript expects camelCase
+    return {
+      agentId: row.agent_id,
+      attempts: row.attempts,
+      completedAt: row.completed_at,
+      createdAt: row.created_at,
+      error: row.error,
+      id: row.id,
+      idempotencyKey: row.idempotency_key,
+      maxAttempts: row.max_attempts,
+      prompt: row.prompt,
+      scheduledAt: row.scheduled_at,
+      startedAt: row.started_at,
+      status: row.status,
+      topicId: row.topic_id,
+      triggerId: row.trigger_id,
+      triggerPayload: row.trigger_payload,
+      userId: row.user_id,
+    } as TriggerQueueJob;
+  });
+
+  return result;
 }
 
 /**
@@ -206,26 +232,18 @@ export async function getQueueStats(): Promise<{
   const db = await getServerDB();
 
   const [pending, processing, completed, failed] = await Promise.all([
-    db
-      .select()
-      .from(agentTriggerQueue)
+    db.select({ count: sql<number>`count(*)` }).from(agentTriggerQueue)
       .where(eq(agentTriggerQueue.status, 'pending'))
-      .then((rows) => rows.length),
-    db
-      .select()
-      .from(agentTriggerQueue)
+      .then((rows) => Number(rows[0]?.count ?? 0)),
+    db.select({ count: sql<number>`count(*)` }).from(agentTriggerQueue)
       .where(eq(agentTriggerQueue.status, 'processing'))
-      .then((rows) => rows.length),
-    db
-      .select()
-      .from(agentTriggerQueue)
+      .then((rows) => Number(rows[0]?.count ?? 0)),
+    db.select({ count: sql<number>`count(*)` }).from(agentTriggerQueue)
       .where(eq(agentTriggerQueue.status, 'completed'))
-      .then((rows) => rows.length),
-    db
-      .select()
-      .from(agentTriggerQueue)
+      .then((rows) => Number(rows[0]?.count ?? 0)),
+    db.select({ count: sql<number>`count(*)` }).from(agentTriggerQueue)
       .where(eq(agentTriggerQueue.status, 'failed'))
-      .then((rows) => rows.length),
+      .then((rows) => Number(rows[0]?.count ?? 0)),
   ]);
 
   return {
@@ -252,11 +270,40 @@ export async function cleanupOldJobs(olderThanDays: number = 7): Promise<number>
     .where(
       and(
         lte(agentTriggerQueue.completedAt, cutoffDate),
-        eq(agentTriggerQueue.status, 'completed'),
+        sql`${agentTriggerQueue.status} IN ('completed', 'failed')`,
       ),
     )
     .returning();
 
-  console.log(`Cleaned up ${deleted.length} old completed jobs`);
+  console.log(`Cleaned up ${deleted.length} old completed/failed jobs`);
   return deleted.length;
+}
+
+/**
+ * Recover stale processing jobs that have been stuck for too long
+ */
+export async function recoverStaleJobs(timeoutMinutes: number = 15): Promise<number> {
+  const db = await getServerDB();
+  const cutoff = new Date(Date.now() - timeoutMinutes * 60 * 1000);
+
+  const recovered = await db
+    .update(agentTriggerQueue)
+    .set({
+      completedAt: new Date(),
+      error: `Job timed out after ${timeoutMinutes} minutes`,
+      status: 'failed' as const,
+    })
+    .where(
+      and(
+        eq(agentTriggerQueue.status, 'processing'),
+        lte(agentTriggerQueue.startedAt, cutoff),
+      ),
+    )
+    .returning();
+
+  if (recovered.length > 0) {
+    console.log(`[TriggerQueue] Recovered ${recovered.length} stale jobs`);
+  }
+
+  return recovered.length;
 }
