@@ -31,6 +31,10 @@ const EXTEND_PARAMS_OPTIONS: ExtendParamsOption[] = [
     key: 'disableContextCaching',
   },
   {
+    hintKey: 'providerModels.item.modelConfig.extendParams.options.enableContext1M.hint',
+    key: 'enableContext1M',
+  },
+  {
     hintKey: 'providerModels.item.modelConfig.extendParams.options.enableReasoning.hint',
     key: 'enableReasoning',
   },
@@ -119,6 +123,7 @@ type PreviewMeta = {
 
 const PREVIEW_META: Partial<Record<ExtendParamsType, PreviewMeta>> = {
   disableContextCaching: { labelSuffix: ' (Claude)', previewWidth: 400 },
+  enableContext1M: { labelSuffix: ' (Claude)', previewWidth: 400 },
   effort: { labelSuffix: ' (Opus 4.6)', previewWidth: 280, tag: 'output_config.effort' },
   enableAdaptiveThinking: {
     labelSuffix: ' (Opus 4.6)',
@@ -227,6 +232,7 @@ const ExtendParamsSelect = memo<ExtendParamsSelectProps>(({ value, onChange }) =
   const previewControls = useMemo<Partial<Record<ExtendParamsType, ReactNode>>>(
     () => ({
       disableContextCaching: <Switch checked disabled />,
+      enableContext1M: <Switch checked disabled />,
       effort: <EffortSlider value="high" />,
       enableAdaptiveThinking: <Switch checked disabled />,
       enableReasoning: <Switch checked disabled />,

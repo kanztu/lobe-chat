@@ -80,6 +80,14 @@ const ControlsForm = memo(() => {
     },
     {
       children: <Switch />,
+      desc: t('extendParams.enableContext1M.desc'),
+      label: t('extendParams.enableContext1M.title'),
+      layout: isNarrow ? 'vertical' : 'horizontal',
+      minWidth: undefined,
+      name: 'enableContext1M',
+    },
+    {
+      children: <Switch />,
       desc: (
         <span style={isNarrow ? descNarrow : descWide}>
           <Trans i18nKey={'extendParams.enableReasoning.desc'} ns={'chat'}>

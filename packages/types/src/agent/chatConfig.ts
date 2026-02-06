@@ -33,6 +33,10 @@ export interface LobeAgentChatConfig {
    */
   enableAdaptiveThinking?: boolean;
   /**
+   * Whether to enable 1M context window (beta)
+   */
+  enableContext1M?: boolean;
+  /**
    * Custom reasoning effort level
    */
   enableReasoningEffort?: boolean;
@@ -117,6 +121,7 @@ export const AgentChatConfigSchema = z.object({
   enableAdaptiveThinking: z.boolean().optional(),
   enableAutoCreateTopic: z.boolean().optional(),
   enableCompressHistory: z.boolean().optional(),
+  enableContext1M: z.boolean().optional(),
   enableContextCompression: z.boolean().optional(),
   enableHistoryCount: z.boolean().optional(),
   enableMaxTokens: z.boolean().optional(),

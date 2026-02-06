@@ -63,6 +63,10 @@ export interface ChatStreamPayload {
   apiMode?: 'chatCompletion' | 'responses';
   effort?: 'low' | 'medium' | 'high' | 'max';
   /**
+   * Enable 1M context window (beta)
+   */
+  enableContext1M?: boolean;
+  /**
    * Enable context caching
    */
   enabledContextCaching?: boolean;

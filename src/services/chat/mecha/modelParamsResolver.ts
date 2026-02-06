@@ -16,6 +16,7 @@ export interface ModelParamsContext {
  */
 export interface ModelExtendParams {
   effort?: string;
+  enableContext1M?: boolean;
   enabledContextCaching?: boolean;
   imageAspectRatio?: string;
   imageResolution?: string;
@@ -139,6 +140,11 @@ export const resolveModelExtendParams = (ctx: ModelParamsContext): ModelExtendPa
   // URL context
   if (modelExtendParams.includes('urlContext') && chatConfig.urlContext) {
     extendParams.urlContext = chatConfig.urlContext;
+  }
+
+  // Context 1M (beta)
+  if (modelExtendParams.includes('enableContext1M') && chatConfig.enableContext1M) {
+    extendParams.enableContext1M = true;
   }
 
   // Image generation params

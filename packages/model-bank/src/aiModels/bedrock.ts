@@ -32,7 +32,7 @@ const bedrockChatModels: AIChatModelCard[] = [
     },
     releasedAt: '2026-02-05',
     settings: {
-      extendParams: ['disableContextCaching', 'enableAdaptiveThinking', 'effort'],
+      extendParams: ['disableContextCaching', 'enableAdaptiveThinking', 'effort', 'enableContext1M'],
     },
     type: 'chat',
   },
@@ -86,7 +86,7 @@ const bedrockChatModels: AIChatModelCard[] = [
     },
     releasedAt: '2025-09-29',
     settings: {
-      extendParams: ['disableContextCaching', 'enableReasoning', 'reasoningBudgetToken'],
+      extendParams: ['disableContextCaching', 'enableReasoning', 'reasoningBudgetToken', 'enableContext1M'],
     },
     type: 'chat',
   },

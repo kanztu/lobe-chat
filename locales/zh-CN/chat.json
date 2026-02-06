@@ -60,6 +60,8 @@
   "emptyAgentAction": "创建助理",
   "extendParams.disableContextCaching.desc": "最多可减少90%的单次对话生成成本，并将速度提升至最多4倍。启用此功能将自动取消历史消息数量的限制。<1>了解更多</1>",
   "extendParams.disableContextCaching.title": "开启上下文缓存",
+  "extendParams.enableContext1M.desc": "为 Claude 模型启用 100 万 token 上下文窗口（测试版）。需要 Anthropic Tier 4+ 权限。超过 20 万 token 的请求将按高级定价计费。",
+  "extendParams.enableContext1M.title": "启用 100 万上下文窗口",
   "extendParams.effort.desc": "控制 Claude 响应时使用的 token 数量。",
   "extendParams.effort.title": "推理力度",
   "extendParams.enableAdaptiveThinking.desc": "让 Claude 通过自适应思考模式动态决定何时思考以及思考多少。",

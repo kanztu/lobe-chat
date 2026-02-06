@@ -250,7 +250,8 @@ export type ExtendParamsType =
   | 'thinkingLevel2'
   | 'imageAspectRatio'
   | 'imageResolution'
-  | 'urlContext';
+  | 'urlContext'
+  | 'enableContext1M';
 
 export interface AiModelSettings {
   extendParams?: ExtendParamsType[];
@@ -280,6 +281,7 @@ export const ExtendParamsTypeSchema = z.enum([
   'imageAspectRatio',
   'imageResolution',
   'urlContext',
+  'enableContext1M',
 ]);
 
 export const ModelSearchImplementTypeSchema = z.enum(['tool', 'params', 'internal']);

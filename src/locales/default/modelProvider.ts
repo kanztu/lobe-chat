@@ -224,6 +224,8 @@ export default {
     'Choose extended parameters supported by the model. Hover an option to preview controls. Incorrect configs may cause request failures.',
   'providerModels.item.modelConfig.extendParams.options.disableContextCaching.hint':
     'For Claude models; can lower cost and speed up responses.',
+  'providerModels.item.modelConfig.extendParams.options.enableContext1M.hint':
+    'For Claude Opus 4.6, Sonnet 4.5, and Sonnet 4; enables 1M token context window (beta).',
   'providerModels.item.modelConfig.extendParams.options.effort.hint':
     'For Claude Opus 4.6; controls effort level (low/medium/high/max).',
   'providerModels.item.modelConfig.extendParams.options.enableAdaptiveThinking.hint':

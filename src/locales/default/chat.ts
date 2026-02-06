@@ -75,6 +75,9 @@ export default {
   'extendParams.disableContextCaching.desc':
     'Reduce by up to 90% of the cost of generating a single conversation and bring a max of 4x speed. Enabling this will automatically disable the limit on the number of historical messages. <1>Learn more</1>',
   'extendParams.disableContextCaching.title': 'Enable Context Caching',
+  'extendParams.enableContext1M.desc':
+    'Enable 1M token context window for Claude models (beta). Requires Anthropic Tier 4+. Premium pricing applies for requests exceeding 200K tokens.',
+  'extendParams.enableContext1M.title': 'Enable 1M Context Window',
   'extendParams.effort.desc':
     'Control how many tokens Claude uses when responding with the effort parameter.',
   'extendParams.effort.title': 'Effort',

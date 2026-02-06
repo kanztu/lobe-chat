@@ -435,13 +435,23 @@ export const createAnthropicCompatibleRuntime = <T extends Record<string, any> =
           console.log(JSON.stringify(finalPayload), '\n');
         }
 
+        let requestHeaders = options?.requestHeaders;
+        if (payload.enableContext1M) {
+          const betaValue = 'context-1m-2025-08-07';
+          const existingBeta = requestHeaders?.['anthropic-beta'];
+          requestHeaders = {
+            ...requestHeaders,
+            'anthropic-beta': existingBeta ? `${existingBeta},${betaValue}` : betaValue,
+          };
+        }
+
         const response = await this.client.messages.create(
           {
             ...finalPayload,
             metadata: options?.user ? { user_id: options.user } : undefined,
           },
           {
-            headers: options?.requestHeaders,
+            headers: requestHeaders,
             signal: options?.signal,
           },
         );
