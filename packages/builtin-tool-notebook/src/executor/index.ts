@@ -59,7 +59,7 @@ class NotebookExecutor extends BaseExecutor<typeof NotebookApiName> {
       const err = e as Error;
       return {
         error: {
-          body: e,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -91,7 +91,7 @@ class NotebookExecutor extends BaseExecutor<typeof NotebookApiName> {
       const err = e as Error;
       return {
         error: {
-          body: e,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -130,7 +130,7 @@ class NotebookExecutor extends BaseExecutor<typeof NotebookApiName> {
       const err = e as Error;
       return {
         error: {
-          body: e,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -161,7 +161,7 @@ class NotebookExecutor extends BaseExecutor<typeof NotebookApiName> {
       const err = e as Error;
       return {
         error: {
-          body: e,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },

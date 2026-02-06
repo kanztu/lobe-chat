@@ -67,7 +67,7 @@ class KnowledgeBaseExecutor extends BaseExecutor<{
     } catch (e) {
       return {
         content: `Error searching knowledge base: ${(e as Error).message}`,
-        error: { body: e, message: (e as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (e as Error).message, name: (e as Error).name }, message: (e as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -108,7 +108,7 @@ class KnowledgeBaseExecutor extends BaseExecutor<{
     } catch (e) {
       return {
         content: `Error reading knowledge: ${(e as Error).message}`,
-        error: { body: e, message: (e as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (e as Error).message, name: (e as Error).name }, message: (e as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }

@@ -110,7 +110,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -136,7 +136,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -158,7 +158,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -180,7 +180,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -208,7 +208,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -256,7 +256,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -288,7 +288,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -327,7 +327,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -358,7 +358,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -385,7 +385,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -411,7 +411,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -440,7 +440,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }
@@ -467,7 +467,7 @@ class LocalSystemExecutor extends BaseExecutor<typeof LocalSystemApiEnum> {
     } catch (error) {
       return {
         content: (error as Error).message,
-        error: { body: error, message: (error as Error).message, type: 'PluginServerError' },
+        error: { body: { message: (error as Error).message, name: (error as Error).name }, message: (error as Error).message, type: 'PluginServerError' },
         success: false,
       };
     }

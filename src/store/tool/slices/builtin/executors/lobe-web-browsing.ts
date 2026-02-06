@@ -60,7 +60,7 @@ class WebBrowsingExecutor extends BaseExecutor<typeof WebBrowsingApiName> {
 
       return {
         error: {
-          body: result.error,
+          body: error ? { message: error.message, name: error.name } : result.error,
           message: error?.message || 'Search failed',
           type: 'PluginServerError',
         },
@@ -76,7 +76,7 @@ class WebBrowsingExecutor extends BaseExecutor<typeof WebBrowsingApiName> {
 
       return {
         error: {
-          body: e,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -168,11 +168,12 @@ class WebBrowsingExecutor extends BaseExecutor<typeof WebBrowsingApiName> {
         };
       }
 
+      const crawlError = result.error as Error;
       return {
         content: result.content,
         error: {
-          body: result.error,
-          message: (result.error as Error)?.message || 'Crawl failed',
+          body: crawlError ? { message: crawlError.message, name: crawlError.name } : result.error,
+          message: crawlError?.message || 'Crawl failed',
           type: 'PluginServerError',
         },
         success: false,
@@ -187,7 +188,7 @@ class WebBrowsingExecutor extends BaseExecutor<typeof WebBrowsingApiName> {
 
       return {
         error: {
-          body: e,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },

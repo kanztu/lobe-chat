@@ -44,7 +44,7 @@ class MemoryExecutor extends BaseExecutor<typeof MemoryApiName> {
       return {
         content: `searchUserMemory with error detail: ${err.message}`,
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -84,7 +84,7 @@ class MemoryExecutor extends BaseExecutor<typeof MemoryApiName> {
       return {
         content: `addContextMemory with error detail: ${err.message}`,
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -123,7 +123,7 @@ class MemoryExecutor extends BaseExecutor<typeof MemoryApiName> {
       return {
         content: `addActivityMemory with error detail: ${err.message}`,
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -162,7 +162,7 @@ class MemoryExecutor extends BaseExecutor<typeof MemoryApiName> {
       return {
         content: `addExperienceMemory with error detail: ${err.message}`,
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -200,7 +200,7 @@ class MemoryExecutor extends BaseExecutor<typeof MemoryApiName> {
       return {
         content: `addIdentityMemory with error detail: ${err.message}`,
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -238,7 +238,7 @@ class MemoryExecutor extends BaseExecutor<typeof MemoryApiName> {
       return {
         content: `addPreferenceMemory with error detail: ${err.message}`,
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -278,7 +278,7 @@ class MemoryExecutor extends BaseExecutor<typeof MemoryApiName> {
       return {
         content: `updateIdentityMemory with error detail: ${err.message}`,
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -313,7 +313,7 @@ class MemoryExecutor extends BaseExecutor<typeof MemoryApiName> {
       return {
         content: `removeIdentityMemory with error detail: ${err.message}`,
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },

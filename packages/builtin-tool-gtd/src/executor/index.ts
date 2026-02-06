@@ -326,7 +326,7 @@ class GTDExecutor extends BaseExecutor<typeof GTDApiNameEnum> {
       const err = e as Error;
       return {
         error: {
-          body: e,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -395,7 +395,7 @@ class GTDExecutor extends BaseExecutor<typeof GTDApiNameEnum> {
     } catch (e) {
       const err = e as Error;
       return {
-        error: { body: e, message: err.message, type: 'PluginServerError' },
+        error: { body: { message: err.message, name: err.name }, message: err.message, type: 'PluginServerError' },
         success: false,
       };
     }

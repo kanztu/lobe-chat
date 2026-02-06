@@ -85,7 +85,7 @@ class PageAgentExecutor extends BaseExecutor<typeof PageAgentApiName> {
       const err = error as Error;
       return {
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -115,7 +115,7 @@ class PageAgentExecutor extends BaseExecutor<typeof PageAgentApiName> {
       const err = error as Error;
       return {
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -154,7 +154,7 @@ class PageAgentExecutor extends BaseExecutor<typeof PageAgentApiName> {
       const err = error as Error;
       return {
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -197,7 +197,7 @@ class PageAgentExecutor extends BaseExecutor<typeof PageAgentApiName> {
       const err = error as Error;
       return {
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
@@ -235,7 +235,7 @@ class PageAgentExecutor extends BaseExecutor<typeof PageAgentApiName> {
       const err = error as Error;
       return {
         error: {
-          body: error,
+          body: { message: err.message, name: err.name },
           message: err.message,
           type: 'PluginServerError',
         },
