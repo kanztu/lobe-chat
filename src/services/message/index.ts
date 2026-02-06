@@ -74,7 +74,7 @@ export class MessageService {
     return lambdaClient.message.update.mutate({
       ...ctx,
       id,
-      value: { error },
+      value: { error, metadata: { completionStatus: 'error' } },
     });
   };
 

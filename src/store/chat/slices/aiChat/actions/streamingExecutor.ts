@@ -570,6 +570,7 @@ export const streamingExecutor: StateCreator<
             metadata: {
               ...result.metadata.usage,
               ...result.metadata.performance,
+              completionStatus: 'complete', // Mark as successfully completed
               performance: result.metadata.performance,
               usage: result.metadata.usage,
               finishType: result.metadata.finishType,

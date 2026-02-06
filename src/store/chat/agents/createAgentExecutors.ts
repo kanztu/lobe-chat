@@ -139,7 +139,10 @@ export const createAgentExecutors = (context: {
           {
             content: LOADING_FLAT,
             groupId: opContext.groupId,
-            metadata: opContext.isSupervisor ? { isSupervisor: true } : undefined,
+            metadata: {
+              ...(opContext.isSupervisor && { isSupervisor: true }),
+              completionStatus: 'pending',
+            },
             model: llmPayload.model,
             parentId: llmPayload.parentMessageId,
             provider: llmPayload.provider,

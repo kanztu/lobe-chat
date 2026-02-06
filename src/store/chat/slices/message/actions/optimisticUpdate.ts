@@ -256,7 +256,15 @@ export const messageOptimisticUpdate: StateCreator<
   optimisticUpdateMessageError: async (id, error, context) => {
     get().internal_dispatchMessage({ id, type: 'updateMessage', value: { error } }, context);
     const ctx = get().internal_getConversationContext(context);
-    const result = await messageService.updateMessage(id, { error }, ctx);
+    // Update both error and completionStatus to track that generation failed
+    const result = await messageService.updateMessage(
+      id,
+      {
+        error,
+        metadata: { completionStatus: 'error' },
+      },
+      ctx,
+    );
     if (result?.success && result.messages) {
       get().replaceMessages(result.messages, { context: ctx });
     } else {

@@ -77,8 +77,16 @@ export const ModelPerformanceSchema = z.object({
   latency: z.number().optional(),
 });
 
+export const MessageCompletionStatusSchema = z.enum([
+  'pending',
+  'complete',
+  'error',
+  'incomplete',
+]);
+
 export const MessageMetadataSchema = ModelUsageSchema.merge(ModelPerformanceSchema).extend({
   collapsed: z.boolean().optional(),
+  completionStatus: MessageCompletionStatusSchema.optional(),
   inspectExpanded: z.boolean().optional(),
   isMultimodal: z.boolean().optional(),
   isSupervisor: z.boolean().optional(),
@@ -111,9 +119,23 @@ export interface ModelPerformance {
   latency?: number;
 }
 
+/**
+ * Message completion status for tracking generation state
+ * - 'pending': Message created, generation not yet completed
+ * - 'complete': Successfully finished generation
+ * - 'error': Generation failed with error
+ * - 'incomplete': Generation was interrupted (page close, network error)
+ */
+export type MessageCompletionStatus = 'pending' | 'complete' | 'error' | 'incomplete';
+
 export interface MessageMetadata extends ModelUsage, ModelPerformance {
   activeBranchIndex?: number;
   activeColumn?: boolean;
+  /**
+   * Tracks the completion status of message generation
+   * Used to detect and recover from interrupted streams
+   */
+  completionStatus?: MessageCompletionStatus;
   finishType?: string;
   /**
    * Message collapse state

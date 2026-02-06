@@ -87,6 +87,7 @@ export const createRuntimeExecutors = (
       assistantMessageItem = await ctx.messageModel.create({
         agentId: state.metadata!.agentId!,
         content: '',
+        metadata: { completionStatus: 'pending' },
         model,
         parentId,
         provider,
@@ -372,17 +373,27 @@ export const createRuntimeExecutors = (
         if (hasContentImages) {
           metadata.isMultimodal = true;
         }
+        // Set completionStatus AFTER Object.assign to guarantee it is not overwritten
+        metadata.completionStatus = 'complete';
 
         await ctx.messageModel.update(assistantMessageItem.id, {
           content: finalContent,
           imageList: imageList.length > 0 ? imageList : undefined,
-          metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+          metadata,
           reasoning: finalReasoning,
           search: grounding,
           tools: toolsCalling.length > 0 ? toolsCalling : undefined,
         });
       } catch (error) {
         console.error('[call_llm] Failed to update message:', error);
+        // Try to mark as incomplete if DB update fails
+        try {
+          await ctx.messageModel.update(assistantMessageItem.id, {
+            metadata: { completionStatus: 'incomplete' },
+          });
+        } catch {
+          // Ignore secondary failure
+        }
       }
 
       // ===== 2. Then accumulate to AgentState =====
@@ -431,6 +442,15 @@ export const createRuntimeExecutors = (
         },
       };
     } catch (error) {
+      // Mark message as incomplete before propagating error
+      try {
+        await ctx.messageModel.update(assistantMessageItem.id, {
+          metadata: { completionStatus: 'incomplete' },
+        });
+      } catch {
+        // Best-effort, ignore secondary failure
+      }
+
       // Publish error event
       await streamManager.publishStreamEvent(operationId, {
         data: {

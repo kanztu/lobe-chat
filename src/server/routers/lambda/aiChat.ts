@@ -156,7 +156,10 @@ export const aiChatRouter = router({
         agentId: input.agentId,
         content: LOADING_FLAT,
         groupId: input.groupId,
-        metadata: input.newAssistantMessage.metadata,
+        metadata: {
+          ...input.newAssistantMessage.metadata,
+          completionStatus: 'pending',
+        },
         model: input.newAssistantMessage.model,
         parentId: messageId,
         provider: input.newAssistantMessage.provider,

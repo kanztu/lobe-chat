@@ -319,6 +319,7 @@ export class AiAgentService {
     const assistantMessageRecord = await this.messageModel.create({
       agentId: resolvedAgentId,
       content: LOADING_FLAT,
+      metadata: { completionStatus: 'pending' },
       model,
       parentId: userMessageRecord.id,
       provider,
@@ -491,6 +492,7 @@ export class AiAgentService {
           message: errorMessage,
           type: 'ServerAgentRuntimeError', // ServiceUnavailable - agent runtime service unavailable
         },
+        metadata: { completionStatus: 'error' },
       });
 
       // Return result with error status - messages are valid but agent didn't start
